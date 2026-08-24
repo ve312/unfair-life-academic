@@ -1,0 +1,17 @@
+{
+  "raw_rows": 48842,
+  "raw_columns": 15,
+  "missing_values_by_column": {
+    "workclass": 2799,
+    "occupation": 2809,
+    "native_country": 857
+  },
+  "rows_dropped_missing_numeric_or_label": 0,
+  "duplicate_rows_removed": 52,
+  "clean_rows": 48790,
+  "class_counts": {
+    "0": 37109,
+    "1": 11681
+  },
+  "positive_rate": 0.23941381430621028
+}
