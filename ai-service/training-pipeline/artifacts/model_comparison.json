@@ -1,0 +1,430 @@
+{
+  "selection_rule": "deployed model: stacking ensemble (architecture fixed by design, see 'stacking' and 'stacking_ablation'); single candidates ranked by highest validation average precision, tie-break lower Brier score",
+  "selected_model": "Stacking (HGB + LR -> LR) [natural]",
+  "selected_family": "Stacking ensemble",
+  "selected_training_set": "natural",
+  "best_single_model": "HistGradientBoosting [natural]",
+  "stacking": {
+    "architecture": {
+      "layer_1_base_learners": {
+        "hgb": "HistGradientBoostingClassifier (same hyperparameters as the candidate)",
+        "lr": "StandardScaler + LogisticRegression (same hyperparameters as the candidate)"
+      },
+      "layer_2_meta_learner": "LogisticRegression on the base learners' log-odds",
+      "stack_method": "decision_function",
+      "meta_features": "out-of-fold log-odds, 5-fold stratified CV (random_state=42)",
+      "training_set": "natural",
+      "formula": "p(x) = sigmoid(intercept + w_hgb * F_hgb(x) + w_lr * F_lr(x))"
+    },
+    "meta_learner": {
+      "intercept": 0.011388813426142948,
+      "hgb": 0.884790870040194,
+      "lr": 0.10128527886736133
+    },
+    "additivity_max_deviation": 1.7763568394002505e-15,
+    "base_learners_validation": {
+      "hgb": {
+        "average_precision": 0.8302507760526532,
+        "roc_auc": 0.9278167023805569,
+        "brier": 0.0880729812704527,
+        "log_loss": 0.2766085698339321,
+        "ece": 0.009559864853764933,
+        "mean_predicted_probability": 0.24129465854558402,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8730272596843616,
+        "precision_at_0_5": 0.7697983275946877,
+        "recall_at_0_5": 0.6699486301369864,
+        "f1_at_0_5": 0.716411078049897
+      },
+      "lr": {
+        "average_precision": 0.7676482682022678,
+        "roc_auc": 0.9057765544770637,
+        "brier": 0.10175943821162514,
+        "log_loss": 0.3198060847259716,
+        "ece": 0.008014360021022258,
+        "mean_predicted_probability": 0.23943174031318423,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8522238163558106,
+        "precision_at_0_5": 0.7330552659019812,
+        "recall_at_0_5": 0.6018835616438356,
+        "f1_at_0_5": 0.6610249177244946
+      }
+    },
+    "gain_over_best_single_model": {
+      "reference_model": "HistGradientBoosting [natural]",
+      "delta_average_precision": 5.724527076489405e-05,
+      "delta_roc_auc": 0.00014641426082384612,
+      "delta_brier": -0.00019557059424489542,
+      "delta_log_loss": -0.00014053287016912996,
+      "delta_ece": -0.0022333579199343596
+    },
+    "serialized_mb": 0.43
+  },
+  "models": [
+    {
+      "name": "Logistic Regression [natural]",
+      "family": "Logistic Regression",
+      "training_set": "natural",
+      "train_seconds": 0.4,
+      "validation": {
+        "average_precision": 0.7676482682022678,
+        "roc_auc": 0.9057765544770637,
+        "brier": 0.10175943821162514,
+        "log_loss": 0.3198060847259716,
+        "ece": 0.008014360021022258,
+        "mean_predicted_probability": 0.23943174031318423,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8522238163558106,
+        "precision_at_0_5": 0.7330552659019812,
+        "recall_at_0_5": 0.6018835616438356,
+        "f1_at_0_5": 0.6610249177244946
+      }
+    },
+    {
+      "name": "KNN [natural]",
+      "family": "KNN",
+      "training_set": "natural",
+      "train_seconds": 0.1,
+      "validation": {
+        "average_precision": 0.6305359859053825,
+        "roc_auc": 0.8467071239521158,
+        "brier": 0.12875983972398397,
+        "log_loss": 0.9442897635686422,
+        "ece": 0.04420816623271413,
+        "mean_predicted_probability": 0.24273336622889954,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8263988522238164,
+        "precision_at_0_5": 0.6629441624365482,
+        "recall_at_0_5": 0.5590753424657534,
+        "f1_at_0_5": 0.6065954482117974
+      }
+    },
+    {
+      "name": "SVM (RBF, calibrated) [natural]",
+      "family": "SVM (RBF, calibrated)",
+      "training_set": "natural",
+      "train_seconds": 17.5,
+      "validation": {
+        "average_precision": 0.7573467613777284,
+        "roc_auc": 0.9013390517085451,
+        "brier": 0.10487282865906905,
+        "log_loss": 0.32973008075674864,
+        "ece": 0.023367296849886074,
+        "mean_predicted_probability": 0.2397333812350806,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8483295757327322,
+        "precision_at_0_5": 0.7318526543878656,
+        "recall_at_0_5": 0.5783390410958904,
+        "f1_at_0_5": 0.646102343376375
+      }
+    },
+    {
+      "name": "Random Forest [natural]",
+      "family": "Random Forest",
+      "training_set": "natural",
+      "train_seconds": 3.6,
+      "validation": {
+        "average_precision": 0.7659645526294471,
+        "roc_auc": 0.9030255986460098,
+        "brier": 0.10291068422222227,
+        "log_loss": 0.3317713154659715,
+        "ece": 0.019301017859391967,
+        "mean_predicted_probability": 0.2428389603621887,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8514039762246361,
+        "precision_at_0_5": 0.7188735177865613,
+        "recall_at_0_5": 0.6228595890410958,
+        "f1_at_0_5": 0.6674311926605505
+      }
+    },
+    {
+      "name": "HistGradientBoosting [natural]",
+      "family": "HistGradientBoosting",
+      "training_set": "natural",
+      "train_seconds": 3.9,
+      "validation": {
+        "average_precision": 0.8302507760526532,
+        "roc_auc": 0.9278167023805569,
+        "brier": 0.0880729812704527,
+        "log_loss": 0.2766085698339321,
+        "ece": 0.009559864853764933,
+        "mean_predicted_probability": 0.24129465854558402,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8730272596843616,
+        "precision_at_0_5": 0.7697983275946877,
+        "recall_at_0_5": 0.6699486301369864,
+        "f1_at_0_5": 0.716411078049897
+      }
+    },
+    {
+      "name": "HistGradientBoosting (class-weighted) [natural]",
+      "family": "HistGradientBoosting (class-weighted)",
+      "training_set": "natural",
+      "train_seconds": 4.7,
+      "validation": {
+        "average_precision": 0.8296265993262074,
+        "roc_auc": 0.9277214191980154,
+        "brier": 0.1095479287999632,
+        "log_loss": 0.331662305013909,
+        "ece": 0.10033482832902119,
+        "mean_predicted_probability": 0.3397281466319521,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8322402131584341,
+        "precision_at_0_5": 0.6054298642533936,
+        "recall_at_0_5": 0.8591609589041096,
+        "f1_at_0_5": 0.7103167580959122
+      }
+    },
+    {
+      "name": "Logistic Regression [smote]",
+      "family": "Logistic Regression",
+      "training_set": "smote",
+      "train_seconds": 0.9,
+      "validation": {
+        "average_precision": 0.7594026910751256,
+        "roc_auc": 0.9002295390324211,
+        "brier": 0.12778403551234382,
+        "log_loss": 0.3906603215791835,
+        "ece": 0.1121195781311172,
+        "mean_predicted_probability": 0.3515128964340481,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8071326091412174,
+        "precision_at_0_5": 0.5665298944900352,
+        "recall_at_0_5": 0.8274828767123288,
+        "f1_at_0_5": 0.6725817675713291
+      }
+    },
+    {
+      "name": "KNN [smote]",
+      "family": "KNN",
+      "training_set": "smote",
+      "train_seconds": 0.2,
+      "validation": {
+        "average_precision": 0.5970801453642387,
+        "roc_auc": 0.8415560931864912,
+        "brier": 0.15535975820207945,
+        "log_loss": 1.43916530917236,
+        "ece": 0.12092776365357738,
+        "mean_predicted_probability": 0.33981556828301734,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.7880713260914122,
+        "precision_at_0_5": 0.5415117719950434,
+        "recall_at_0_5": 0.7482876712328768,
+        "f1_at_0_5": 0.6283249460819554
+      }
+    },
+    {
+      "name": "SVM (RBF, calibrated) [smote]",
+      "family": "SVM (RBF, calibrated)",
+      "training_set": "smote",
+      "train_seconds": 27.6,
+      "validation": {
+        "average_precision": 0.73621387085475,
+        "roc_auc": 0.8883062214611872,
+        "brier": 0.13127588017851466,
+        "log_loss": 0.40049649297312867,
+        "ece": 0.1048237623748745,
+        "mean_predicted_probability": 0.34421708067780543,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8087722894035663,
+        "precision_at_0_5": 0.5748407643312102,
+        "recall_at_0_5": 0.7726883561643836,
+        "f1_at_0_5": 0.6592403214024836
+      }
+    },
+    {
+      "name": "Random Forest [smote]",
+      "family": "Random Forest",
+      "training_set": "smote",
+      "train_seconds": 6.3,
+      "validation": {
+        "average_precision": 0.7159784313384604,
+        "roc_auc": 0.8925831789884202,
+        "brier": 0.1206973420449281,
+        "log_loss": 0.40045830775264807,
+        "ece": 0.06648742875514009,
+        "mean_predicted_probability": 0.3030893496005577,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8299856527977044,
+        "precision_at_0_5": 0.6237659963436929,
+        "recall_at_0_5": 0.7303082191780822,
+        "f1_at_0_5": 0.6728455925852889
+      }
+    },
+    {
+      "name": "HistGradientBoosting [smote]",
+      "family": "HistGradientBoosting",
+      "training_set": "smote",
+      "train_seconds": 18.3,
+      "validation": {
+        "average_precision": 0.7965654512779244,
+        "roc_auc": 0.9100801301572887,
+        "brier": 0.1135935351647629,
+        "log_loss": 0.34938705995330865,
+        "ece": 0.07835328237364307,
+        "mean_predicted_probability": 0.3099728846661935,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8345972535355606,
+        "precision_at_0_5": 0.6204939919893191,
+        "recall_at_0_5": 0.795804794520548,
+        "f1_at_0_5": 0.6972993248312078
+      }
+    },
+    {
+      "name": "Stacking (HGB + LR -> LR) [natural]",
+      "family": "Stacking ensemble",
+      "training_set": "natural",
+      "train_seconds": 25.9,
+      "validation": {
+        "average_precision": 0.8303080213234181,
+        "roc_auc": 0.9279631166413808,
+        "brier": 0.0878774106762078,
+        "log_loss": 0.276468036963763,
+        "ece": 0.007326506933830574,
+        "mean_predicted_probability": 0.24205061920530596,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8729247796679648,
+        "precision_at_0_5": 0.7712871287128713,
+        "recall_at_0_5": 0.6669520547945206,
+        "f1_at_0_5": 0.7153351698806244
+      }
+    }
+  ],
+  "stacking_ablation": [
+    {
+      "name": "Stacking (HGB + LR -> LR)",
+      "deployed": true,
+      "exact_shap_decomposition": true,
+      "meta_learner": {
+        "intercept": 0.011388813426142948,
+        "hgb": 0.884790870040194,
+        "lr": 0.10128527886736133
+      },
+      "serialized_mb": 0.43,
+      "train_seconds": 25.9,
+      "validation": {
+        "average_precision": 0.8303080213234181,
+        "roc_auc": 0.9279631166413808,
+        "brier": 0.0878774106762078,
+        "log_loss": 0.276468036963763,
+        "ece": 0.007326506933830574,
+        "mean_predicted_probability": 0.24205061920530596,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8729247796679648,
+        "precision_at_0_5": 0.7712871287128713,
+        "recall_at_0_5": 0.6669520547945206,
+        "f1_at_0_5": 0.7153351698806244
+      }
+    },
+    {
+      "name": "Stacking (HGB + RF + LR -> LR)",
+      "deployed": false,
+      "exact_shap_decomposition": false,
+      "meta_learner": {
+        "intercept": 0.02065959745721086,
+        "hgb": 0.8581526125617912,
+        "rf": 0.07790858343435458,
+        "lr": 0.07083000735887647
+      },
+      "serialized_mb": 5.96,
+      "train_seconds": 37.0,
+      "validation": {
+        "average_precision": 0.8304045412762433,
+        "roc_auc": 0.9280711465450733,
+        "brier": 0.08789333477658448,
+        "log_loss": 0.27630774268961156,
+        "ece": 0.00789946939531105,
+        "mean_predicted_probability": 0.24191727693988654,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.8727198196351711,
+        "precision_at_0_5": 0.7707920792079208,
+        "recall_at_0_5": 0.6665239726027398,
+        "f1_at_0_5": 0.7148760330578512
+      }
+    },
+    {
+      "name": "Stacking (HGB + RF + LR + KNN -> LR)",
+      "deployed": false,
+      "exact_shap_decomposition": false,
+      "meta_learner": {
+        "intercept": 0.02108865680647137,
+        "hgb": 0.8589248752523587,
+        "rf": 0.0781564230850553,
+        "lr": 0.07122059992756413,
+        "knn": -0.0004828114840953363
+      },
+      "serialized_mb": 6.91,
+      "train_seconds": 49.0,
+      "validation": {
+        "average_precision": 0.8303870018859245,
+        "roc_auc": 0.9280674551869118,
+        "brier": 0.08789527580677348,
+        "log_loss": 0.27630659269484936,
+        "ece": 0.007890489271387064,
+        "mean_predicted_probability": 0.2419193086904525,
+        "observed_positive_rate": 0.23939331830293092,
+        "accuracy_at_0_5": 0.872822299651568,
+        "precision_at_0_5": 0.7709054923305294,
+        "recall_at_0_5": 0.6669520547945206,
+        "f1_at_0_5": 0.7151709892127611
+      }
+    }
+  ],
+  "smote_ablation": [
+    {
+      "family": "HistGradientBoosting",
+      "average_precision_natural": 0.8302507760526532,
+      "average_precision_smote": 0.7965654512779244,
+      "delta_average_precision": -0.03368532477472874,
+      "ece_natural": 0.009559864853764933,
+      "ece_smote": 0.07835328237364307,
+      "mean_probability_natural": 0.24129465854558402,
+      "mean_probability_smote": 0.3099728846661935,
+      "observed_positive_rate": 0.23939331830293092
+    },
+    {
+      "family": "KNN",
+      "average_precision_natural": 0.6305359859053825,
+      "average_precision_smote": 0.5970801453642387,
+      "delta_average_precision": -0.03345584054114381,
+      "ece_natural": 0.04420816623271413,
+      "ece_smote": 0.12092776365357738,
+      "mean_probability_natural": 0.24273336622889954,
+      "mean_probability_smote": 0.33981556828301734,
+      "observed_positive_rate": 0.23939331830293092
+    },
+    {
+      "family": "Logistic Regression",
+      "average_precision_natural": 0.7676482682022678,
+      "average_precision_smote": 0.7594026910751256,
+      "delta_average_precision": -0.008245577127142245,
+      "ece_natural": 0.008014360021022258,
+      "ece_smote": 0.1121195781311172,
+      "mean_probability_natural": 0.23943174031318423,
+      "mean_probability_smote": 0.3515128964340481,
+      "observed_positive_rate": 0.23939331830293092
+    },
+    {
+      "family": "Random Forest",
+      "average_precision_natural": 0.7659645526294471,
+      "average_precision_smote": 0.7159784313384604,
+      "delta_average_precision": -0.049986121290986674,
+      "ece_natural": 0.019301017859391967,
+      "ece_smote": 0.06648742875514009,
+      "mean_probability_natural": 0.2428389603621887,
+      "mean_probability_smote": 0.3030893496005577,
+      "observed_positive_rate": 0.23939331830293092
+    },
+    {
+      "family": "SVM (RBF, calibrated)",
+      "average_precision_natural": 0.7573467613777284,
+      "average_precision_smote": 0.73621387085475,
+      "delta_average_precision": -0.021132890522978398,
+      "ece_natural": 0.023367296849886074,
+      "ece_smote": 0.1048237623748745,
+      "mean_probability_natural": 0.2397333812350806,
+      "mean_probability_smote": 0.34421708067780543,
+      "observed_positive_rate": 0.23939331830293092
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "total_records": 48790,
+  "min_required_records": 35000,
+  "splits": {
+    "train": {
+      "rows": 29274,
+      "class_counts": {
+        "0": 22265,
+        "1": 7009
+      },
+      "positive_rate": 0.23942747830839653
+    },
+    "validation": {
+      "rows": 9758,
+      "class_counts": {
+        "0": 7422,
+        "1": 2336
+      },
+      "positive_rate": 0.23939331830293092
+    },
+    "test": {
+      "rows": 9758,
+      "class_counts": {
+        "0": 7422,
+        "1": 2336
+      },
+      "positive_rate": 0.23939331830293092
+    }
+  },
+  "train_smote": {
+    "rows": 44530,
+    "class_counts": {
+      "0": 22265,
+      "1": 22265
+    },
+    "positive_rate": 0.5
+  },
+  "synthetic_rows": 15256,
+  "smote": {
+    "method": "SMOTENC",
+    "k_neighbors": 5,
+    "random_state": 42
+  }
+}
