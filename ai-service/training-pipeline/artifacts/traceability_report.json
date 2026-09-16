@@ -1,0 +1,198 @@
+{
+  "generated_at_utc": "2026-10-23 20:57:52",
+  "model": {
+    "name": "Stacking (HGB + LR -> LR) [natural]",
+    "class": "StackingClassifier",
+    "file": "artifacts/best_model.joblib",
+    "architecture": {
+      "layer_1_base_learners": {
+        "hgb": "HistGradientBoostingClassifier (same hyperparameters as the candidate)",
+        "lr": "StandardScaler + LogisticRegression (same hyperparameters as the candidate)"
+      },
+      "layer_2_meta_learner": "LogisticRegression on the base learners' log-odds",
+      "stack_method": "decision_function",
+      "meta_features": "out-of-fold log-odds, 5-fold stratified CV (random_state=42)",
+      "training_set": "natural",
+      "formula": "p(x) = sigmoid(intercept + w_hgb * F_hgb(x) + w_lr * F_lr(x))"
+    },
+    "meta_learner": {
+      "intercept": 0.011388813426142948,
+      "hgb": 0.884790870040194,
+      "lr": 0.10128527886736133
+    }
+  },
+  "data": {
+    "validation_rows": 9758,
+    "test_rows": 9758,
+    "test_positive_rate": 0.23939331830293092
+  },
+  "decision_policy": {
+    "type": "selective_classification",
+    "lower_bound": 0.23,
+    "upper_bound": 0.78,
+    "deterministic_threshold": 0.7782267429815305,
+    "inside_band": "weighted coin flip with P(mobility) = probability (applied by the BFF)",
+    "selection_rule": "maximise validation coverage s.t. precision >= 95% for both deterministic outcomes, each with >= 30 cases"
+  },
+  "selective_classification": {
+    "validation": {
+      "coverage": 0.745029719204755,
+      "covered_cases": 7270,
+      "uncertain_cases": 2488,
+      "accuracy_on_covered": 0.952544704264099,
+      "accuracy_on_covered_95ci": [
+        0.9474138900972136,
+        0.9571975228950063
+      ],
+      "precision_mobility": 0.9535637149028078,
+      "precision_mobility_95ci": [
+        0.9380354117077454,
+        0.965344397803668
+      ],
+      "precision_no_mobility": 0.9523959646910467,
+      "precision_no_mobility_95ci": [
+        0.946877040464669,
+        0.9573673451554442
+      ],
+      "share_of_high_earners_decided_deterministically": 0.3779965753424658,
+      "positive_rate_inside_band": 0.46262057877813506,
+      "mean_probability_inside_band": 0.48154350096530063,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 6042,
+          "luck": 1337,
+          "predicted_yes": 43
+        },
+        "actual_mobility": {
+          "predicted_no": 302,
+          "luck": 1151,
+          "predicted_yes": 883
+        }
+      }
+    },
+    "test": {
+      "coverage": 0.745029719204755,
+      "covered_cases": 7270,
+      "uncertain_cases": 2488,
+      "accuracy_on_covered": 0.9544704264099038,
+      "accuracy_on_covered_95ci": [
+        0.9494337555271221,
+        0.9590270677331499
+      ],
+      "precision_mobility": 0.9568965517241379,
+      "precision_mobility_95ci": [
+        0.9418380524231823,
+        0.9681879953747444
+      ],
+      "precision_no_mobility": 0.9541154210028382,
+      "precision_no_mobility_95ci": [
+        0.9486852019292012,
+        0.9589958419989629
+      ],
+      "share_of_high_earners_decided_deterministically": 0.3801369863013699,
+      "positive_rate_inside_band": 0.465032154340836,
+      "mean_probability_inside_band": 0.4901581046713322,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 6051,
+          "luck": 1331,
+          "predicted_yes": 40
+        },
+        "actual_mobility": {
+          "predicted_no": 291,
+          "luck": 1157,
+          "predicted_yes": 888
+        }
+      }
+    },
+    "bootstrap": {
+      "resamples": 2000,
+      "coverage_95ci": [
+        0.7366263578602172,
+        0.75384556261529
+      ],
+      "accuracy_on_covered_95ci": [
+        0.9497525019939062,
+        0.9592407356059789
+      ]
+    }
+  },
+  "game_mechanic": {
+    "test": {
+      "expected_accuracy_all_players": 0.8522322874367589,
+      "simulated_accuracy_95_range": [
+        0.847407255585161,
+        0.8568354170936667
+      ],
+      "simulations": 2000,
+      "expected_mobility_rate_inside_band": 0.4901581046713322
+    }
+  },
+  "deterministic_threshold": {
+    "status": "TARGET_MET_ON_VALIDATION",
+    "rule": "lowest threshold in [0.5, 0.99] with validation precision >= 95% and recall > 15%",
+    "validation": {
+      "threshold": 0.7782267429815305,
+      "accuracy": 0.8466898954703833,
+      "precision": 0.9506437768240343,
+      "precision_95ci": [
+        0.9347932295015825,
+        0.9627947027579428
+      ],
+      "recall": 0.3792808219178082,
+      "predicted_positive": 932,
+      "confusion_matrix": {
+        "tn": 7376,
+        "fp": 46,
+        "fn": 1450,
+        "tp": 886
+      }
+    },
+    "test": {
+      "threshold": 0.7782267429815305,
+      "accuracy": 0.847407255585161,
+      "precision": 0.9548872180451128,
+      "precision_95ci": [
+        0.9395826296941814,
+        0.9664533531489268
+      ],
+      "recall": 0.3805650684931507,
+      "predicted_positive": 931,
+      "confusion_matrix": {
+        "tn": 7380,
+        "fp": 42,
+        "fn": 1447,
+        "tp": 889
+      }
+    }
+  },
+  "reference_at_0_5": {
+    "test": {
+      "threshold": 0.5,
+      "accuracy": 0.8767165402746464,
+      "precision": 0.7738037699371677,
+      "precision_95ci": [
+        0.7552788095722447,
+        0.7913138857569366
+      ],
+      "recall": 0.6853595890410958,
+      "predicted_positive": 2069,
+      "confusion_matrix": {
+        "tn": 6954,
+        "fp": 468,
+        "fn": 735,
+        "tp": 1601
+      }
+    }
+  },
+  "calibration": {
+    "test": {
+      "roc_auc": 0.9312739765248077,
+      "brier": 0.08625910998373305
+    }
+  },
+  "threshold_search": {
+    "selected_threshold": 0.7782267429815305,
+    "status": "TARGET_MET_ON_VALIDATION"
+  }
+}
