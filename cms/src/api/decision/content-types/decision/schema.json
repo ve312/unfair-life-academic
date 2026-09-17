@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "decisions",
+  "info": {
+    "singularName": "decision",
+    "pluralName": "decisions",
+    "displayName": "Decision",
+    "description": "A directed edge of the narrative graph: a choice offered in one scene that leads to another. When requires_mobility_check is true, the AI prediction forks it: next_scene on success, failure_scene on failure. hidden_modifiers (mobility checks only) changes the story's base profile before the AI evaluates it: integers are added to numeric traits, e.g. {\"capital-gain\": 5000, \"age\": 2}, and strings replace categorical traits, e.g. {\"workclass\": \"Private\"}. A delta of 0 changes nothing, so new decisions start from a zero template."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "metadatas": {
+      "hidden_modifiers": {
+        "edit": {
+          "label": "Modificadores ocultos (solo pruebas de movilidad)",
+          "description": "Usa formato JSON válido. Para sumar o restar valores numéricos: {\"capital-gain\": 5000, \"age\": 2}. Para cambiar estados: {\"workclass\": \"Private\"}. Solo usa las variables permitidas del modelo: age, education-num, hours-per-week, capital-gain, capital-loss (números enteros) y workclass, education, marital-status, occupation, relationship, race, sex, native-country (texto). Los valores en 0 no cambian nada: cambia solo los números que la decisión debe alterar. Cualquier valor distinto de 0 requiere activar requires_mobility_check.",
+          "placeholder": "{\"capital-gain\": 5000, \"age\": 2, \"workclass\": \"Private\"}"
+        }
+      }
+    }
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "requires_mobility_check": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "hidden_modifiers": {
+      "type": "json",
+      "default": {
+        "capital-gain": 0,
+        "capital-loss": 0,
+        "age": 0
+      }
+    },
+    "source_scene": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scene.scene",
+      "inversedBy": "available_decisions"
+    },
+    "next_scene": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scene.scene",
+      "inversedBy": "incoming_decisions"
+    },
+    "failure_scene": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scene.scene",
+      "inversedBy": "incoming_failure_decisions"
+    }
+  }
+}
