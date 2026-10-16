@@ -1,0 +1,274 @@
+{
+  "generated_at_utc": "2026-10-25 19:16:37",
+  "dataset": {
+    "source": "folktables ACSDataSource (ACS PUMS, 1-Year, person)",
+    "state": "NY",
+    "survey_year": 2018,
+    "raw_records": 196967,
+    "evaluated_records": 103021,
+    "filter": "ACSIncome: AGEP > 16, PINCP > 100, WKHP > 0, PWGTP >= 1"
+  },
+  "temporal_normalisation": {
+    "cpi_source": "bff-api\\src\\core\\domain\\services\\consumer-price-index.ts",
+    "deflator_to_1994": 0.5901866534983095,
+    "adjinc_applied": true,
+    "target": "PINCP * ADJINC * deflator > 50000 (1994 dollars)",
+    "threshold_in_survey_year_dollars": 84718.9608636977,
+    "capital_gain_and_loss": "set to 0: ACS records no realised capital gains or losses"
+  },
+  "model": {
+    "name": "Stacking (HGB + LR -> LR) [natural]",
+    "file": "training-pipeline/artifacts/best_model.joblib",
+    "retrained": false
+  },
+  "mapping_diagnostics": {
+    "unseen_category_shares": {
+      "workclass": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "education": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "marital_status": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "occupation": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "relationship": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "race": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "sex": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "native_country": {
+        "share": 0.08129410508537094,
+        "rows": 8375,
+        "top_values": {
+          "Other": 8375
+        }
+      }
+    }
+  },
+  "ood": {
+    "probabilistic": {
+      "roc_auc": 0.8021665845253264,
+      "average_precision": 0.5136411813657666,
+      "brier": 0.15039012716107242,
+      "log_loss": 0.4539123266792986,
+      "ece": 0.09667410413093176,
+      "mean_predicted_probability": 0.27277716988612855,
+      "observed_positive_rate": 0.21251977752108794,
+      "weighted": {
+        "roc_auc": 0.8073824541914276,
+        "average_precision": 0.5147321812203354,
+        "brier": 0.14490923340935974,
+        "mean_predicted_probability": 0.2515057610737829,
+        "observed_positive_rate": 0.20930853814654168
+      }
+    },
+    "reference_at_0_5": {
+      "threshold": 0.5,
+      "accuracy": 0.7730753923957251,
+      "precision": 0.47238556010420546,
+      "precision_95ci": [
+        0.466420667153575,
+        0.4783583477010517
+      ],
+      "recall": 0.5797478761304466,
+      "confusion_matrix": {
+        "tn": 66950,
+        "fp": 14177,
+        "fn": 9201,
+        "tp": 12693
+      }
+    },
+    "deterministic_threshold": {
+      "threshold": 0.7782267429815305,
+      "accuracy": 0.8048553207598451,
+      "precision": 0.632828732561591,
+      "precision_95ci": [
+        0.6212464834985253,
+        0.6442596116710612
+      ],
+      "recall": 0.1947565543071161,
+      "confusion_matrix": {
+        "tn": 78653,
+        "fp": 2474,
+        "fn": 17630,
+        "tp": 4264
+      }
+    },
+    "selective_classification": {
+      "band": [
+        0.23,
+        0.78
+      ],
+      "coverage": 0.6346764251948632,
+      "precision_mobility": 0.6347205346294046,
+      "precision_mobility_95ci": [
+        0.6230143703854777,
+        0.6462695841651299
+      ],
+      "precision_no_mobility": 0.9137939830955256,
+      "precision_no_mobility_95ci": [
+        0.9114983131565869,
+        0.916035590391595
+      ],
+      "accuracy_on_covered": 0.8856924371033111,
+      "accuracy_on_covered_95ci": [
+        0.8832308786192238,
+        0.8881086783251593
+      ],
+      "positive_rate_inside_band": 0.33600807737272825,
+      "mean_probability_inside_band": 0.5168181770490503,
+      "expected_game_accuracy": 0.7555714165540958,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 53732,
+          "luck": 24990,
+          "predicted_yes": 2405
+        },
+        "actual_mobility": {
+          "predicted_no": 5069,
+          "luck": 12646,
+          "predicted_yes": 4179
+        }
+      }
+    }
+  },
+  "in_distribution_1994_test": {
+    "roc_auc": 0.9312739765248077,
+    "brier": 0.08625910998373305,
+    "observed_positive_rate": 0.23939331830293092,
+    "coverage": 0.745029719204755,
+    "precision_mobility": 0.9568965517241379,
+    "precision_no_mobility": 0.9541154210028382,
+    "accuracy_on_covered": 0.9544704264099038,
+    "expected_game_accuracy": 0.8522322874367589
+  },
+  "shift_summary": {
+    "delta_roc_auc": -0.1291073919994813,
+    "delta_brier": 0.06413101717733936,
+    "prior_shift": -0.02687354078184298,
+    "calibration_in_the_large": 0.0602573923650406,
+    "delta_coverage": -0.1103532940098918,
+    "delta_precision_mobility": -0.3221760170947333,
+    "delta_precision_no_mobility": -0.040321437907312574,
+    "both_deterministic_precisions_at_least_95": false
+  },
+  "adaptation": {
+    "rule": "04_evaluator.choose_band: maximise coverage s.t. precision >= 95% for both deterministic decisions, each with >= 30 cases (grid step 0.01)",
+    "split": {
+      "adaptation_rows": 51510,
+      "held_out_rows": 51511,
+      "stratified": true,
+      "random_state": 42
+    },
+    "grid_reach_on_adaptation_half": {
+      "best_precision_mobility": {
+        "precision": 0.7954545454545454,
+        "at_cutoff": 0.92
+      },
+      "best_precision_no_mobility": {
+        "precision": 0.990883663109914,
+        "at_cutoff": 0.01
+      }
+    },
+    "held_out_frozen_1994_band": {
+      "band": [
+        0.23,
+        0.78
+      ],
+      "coverage": 0.6332433849080779,
+      "precision_mobility": 0.6322425697988592,
+      "precision_mobility_95ci": [
+        0.6157238846934527,
+        0.6484565901095503
+      ],
+      "precision_no_mobility": 0.9151529636711281,
+      "precision_no_mobility_95ci": [
+        0.9119069577676646,
+        0.9182900796612257
+      ],
+      "accuracy_on_covered": 0.886262607682639,
+      "accuracy_on_covered_95ci": [
+        0.8827715791224945,
+        0.8896626685736019
+      ],
+      "positive_rate_inside_band": 0.33643870421342364,
+      "mean_probability_inside_band": 0.5159225944265912,
+      "expected_game_accuracy": 0.7553249839364767,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 26803,
+          "luck": 12536,
+          "predicted_yes": 1225
+        },
+        "actual_mobility": {
+          "predicted_no": 2485,
+          "luck": 6356,
+          "predicted_yes": 2106
+        }
+      }
+    },
+    "adapted_band": null,
+    "adaptation_status": "TWO_SIDED_TARGET_NOT_REACHABLE: No uncertainty band reaches the precision target on validation",
+    "one_sided_adaptation": {
+      "status": "ADAPTED",
+      "policy": "deterministic 'no mobility' for p <= lower; weighted coin for every p > lower (no deterministic 'mobility')",
+      "lower_cutoff": 0.07,
+      "held_out": {
+        "band": [
+          0.07,
+          null
+        ],
+        "coverage": 0.40090466114033896,
+        "precision_mobility": null,
+        "precision_mobility_95ci": null,
+        "precision_no_mobility": 0.958113408551644,
+        "precision_no_mobility_95ci": [
+          0.9552948634728489,
+          0.9607615505968041
+        ],
+        "accuracy_on_covered": 0.958113408551644,
+        "accuracy_on_covered_95ci": [
+          0.9552948634728489,
+          0.9607615505968041
+        ],
+        "positive_rate_inside_band": 0.326701231367466,
+        "mean_probability_inside_band": 0.4438086857064381,
+        "expected_game_accuracy": 0.7389056914340109,
+        "decision_matrix": {
+          "actual_no_mobility": {
+            "predicted_no": 19786,
+            "luck": 20778,
+            "predicted_yes": 0
+          },
+          "actual_mobility": {
+            "predicted_no": 865,
+            "luck": 10082,
+            "predicted_yes": 0
+          }
+        }
+      }
+    }
+  }
+}
