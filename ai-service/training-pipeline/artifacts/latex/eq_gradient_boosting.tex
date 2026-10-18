@@ -1,0 +1,9 @@
+\begin{align}
+F_0(x) &= \log\frac{\bar{y}}{1-\bar{y}}, \qquad
+F_M(x) = F_0(x) + \nu \sum_{m=1}^{M} f_m(x), \qquad \nu = 0.05,\ M = 321 \\
+\hat{p}(x) &= \sigma\bigl(F_M(x)\bigr) = \frac{1}{1 + e^{-F_M(x)}} \\
+\mathcal{L} &= -\frac{1}{n}\sum_{i=1}^{n}\Bigl[y_i \log \hat{p}(x_i) + (1-y_i)\log\bigl(1-\hat{p}(x_i)\bigr)\Bigr] + \lambda \lVert w \rVert_2^2,
+\qquad \lambda = 1.0 \\
+f_m &= \arg\min_{f} \sum_{i=1}^{n} \Bigl(g_i\, f(x_i) + \tfrac{1}{2} h_i\, f(x_i)^2\Bigr), \quad
+g_i = \hat{p}_{m-1}(x_i) - y_i,\ \ h_i = \hat{p}_{m-1}(x_i)\bigl(1-\hat{p}_{m-1}(x_i)\bigr)
+\end{align}

@@ -1,0 +1,5 @@
+\begin{align}
+\text{CPI}(t) &= \begin{cases} \text{CPI}^{\text{BLS}}(t) & t \le 2024 \\ \text{CPI}^{\text{BLS}}(2024)\,(1 + 0.025)^{\,t - 2024} & t > 2024 \end{cases} \\
+x^{(1994)} &= x^{(t)} \cdot \frac{\text{CPI}(1994)}{\text{CPI}(t)}, \qquad x \in \{\text{capital\_gain}, \text{capital\_loss}\} \\
+\text{Threshold}^{(t)} &= 50\,000 \cdot \frac{\text{CPI}(t)}{\text{CPI}(1994)} \qquad \text{e.g. } t = 2026:\ \$111,191
+\end{align}
