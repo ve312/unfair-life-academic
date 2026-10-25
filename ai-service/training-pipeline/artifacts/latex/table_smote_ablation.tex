@@ -1,0 +1,16 @@
+\begin{table}
+\caption{SMOTE ablation on the validation set: average precision (AP), expected calibration error (ECE) and mean predicted probability.}
+\label{tab:smote}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & average precision natural & average precision smote & delta average precision & ece natural & ece smote & mean probability natural & mean probability smote & observed positive rate \\
+family &  &  &  &  &  &  &  &  \\
+\midrule
+HistGradientBoosting & 0.8303 & 0.7966 & -0.0337 & 0.0096 & 0.0784 & 0.2413 & 0.3100 & 0.2394 \\
+KNN & 0.6305 & 0.5971 & -0.0335 & 0.0442 & 0.1209 & 0.2427 & 0.3398 & 0.2394 \\
+Logistic Regression & 0.7676 & 0.7594 & -0.0082 & 0.0080 & 0.1121 & 0.2394 & 0.3515 & 0.2394 \\
+Random Forest & 0.7660 & 0.7160 & -0.0500 & 0.0193 & 0.0665 & 0.2428 & 0.3031 & 0.2394 \\
+SVM (RBF, calibrated) & 0.7573 & 0.7362 & -0.0211 & 0.0234 & 0.1048 & 0.2397 & 0.3442 & 0.2394 \\
+\bottomrule
+\end{tabular}
+\end{table}

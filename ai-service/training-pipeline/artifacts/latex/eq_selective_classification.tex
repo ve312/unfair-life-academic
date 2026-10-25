@@ -1,0 +1,11 @@
+\begin{align}
+(\ell^*, u^*) &= \arg\max_{\ell < u}\ \frac{\bigl|\{i \in V : \hat{p}_i \le \ell \ \lor\ \hat{p}_i \ge u\}\bigr|}{|V|}
+\quad \text{s.t.}\quad
+\Pr\bigl(y = 1 \mid \hat{p} \ge u\bigr) \ge 0.95,\ \ \Pr\bigl(y = 0 \mid \hat{p} \le \ell\bigr) \ge 0.95 \\
+(\ell^*, u^*) &= (0.23,\ 0.78) \\
+\text{decision}(x) &= \begin{cases}
+\text{mobility} & \hat{p}(x) \ge u^* \\
+\text{no mobility} & \hat{p}(x) \le \ell^* \\
+\text{mobility with probability } \hat{p}(x) & \ell^* < \hat{p}(x) < u^* \quad \text{(systemic luck)}
+\end{cases}
+\end{align}
