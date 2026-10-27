@@ -15,6 +15,8 @@ The exported model is consumed by the FastAPI server in `/ai-service/inference-a
 | 03 | `src/03_trainer.py` | Trains every model on the natural and the SMOTE data and selects by **validation** average precision. SMOTE lowered average precision in every family and skewed probabilities, so the deployed model uses the natural distribution. |
 | 04 | `src/04_evaluator.py` | Chooses the uncertainty band and a 95%-precision threshold on validation, then reports once on the untouched test set with confidence intervals. |
 | — | `notebooks/01_math_and_eda.ipynb` | Reads the artifacts and writes figures (`artifacts/figures/`) and LaTeX equations and tables (`artifacts/latex/`) for the academic report. |
+| — | `src/advanced_metrics.py` | ROC/PR curves, Gini and KS with bootstrap intervals, 5x2 repeated stratified CV with Friedman and corrected t-tests, learning curves, HGB hyperparameter sensitivity, residual analysis, the accuracy ceiling and the 95% guarantee. Writes `artifacts/advanced_metrics_report.json` (about 15 minutes; `--skip-cv` for the fast sections). |
+| — | `src/generate_extra_plots.py` | Adds six figures (model comparison, uncertainty band, systemic luck, inflation, concept drift, a story replayed offline) and persists every plotted number in `artifacts/extra_figures_report.json`. Reuses the logic of `04_evaluator.py` and `../05_ood_testing.py`; the ACS part needs the folktables cache (`--skip-acs` otherwise). |
 
 ## Directory Structure
 
@@ -45,6 +47,8 @@ python src/02_balancer.py
 python src/03_trainer.py
 python src/04_evaluator.py
 jupyter nbconvert --to notebook --execute --inplace notebooks/01_math_and_eda.ipynb
+python src/generate_extra_plots.py
+python src/advanced_metrics.py
 ```
 
 ## Dependencies

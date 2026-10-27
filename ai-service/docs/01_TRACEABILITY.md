@@ -2,7 +2,7 @@
 
 > **Ámbito.** Este documento describe la trazabilidad de los datos y de los resultados del modelo predictivo de *Unfair Life*: de dónde proviene cada cifra, qué artefacto la registra y cómo se garantiza que el modelo documentado es el mismo que atiende las peticiones en producción. Deliberadamente, no aborda la formulación matemática de los métodos ni la funcionalidad del juego. Esos temas se tratan en otros documentos.
 >
-> **Resultado esperado frente a resultado obtenido.** Cada prueba de este documento declara primero el **resultado esperado**, fijado *a priori* por un requisito, por la teoría o por un cálculo analítico, y después el **resultado obtenido**, leído del artefacto que lo registra. Cada contraste se justifica en dos planos: el matemático, que explica por qué la diferencia observada es la que la teoría admite, y el narrativo, que explica qué significa ese resultado para el jugador de *Unfair Life*. La sección 5 resume todos los contrastes.
+> **Resultado esperado frente a resultado obtenido.** Cada prueba de este documento declara primero el **resultado esperado**, fijado *a priori* por un requisito, por la teoría o por un cálculo analítico, y después el **resultado obtenido**, leído del artefacto que lo registra. Cada contraste se justifica en dos planos: el matemático, que explica por qué la diferencia observada es la que la teoría admite, y el narrativo, que explica qué significa ese resultado para el jugador de *Unfair Life*. La sección 4 recorre una petición real del juego, desde el clic del jugador hasta la predicción, y la sección 6 resume todos los contrastes.
 
 ---
 
@@ -311,7 +311,7 @@ En los dos estados, el límite inferior del intervalo de confianza queda por enc
 
 El error se concentra en las mujeres y en los grupos ocupacionales más feminizados. *Prof-specialty* reúne por sí sola el 59 % (CA) y el 62 % (NY) de las decisiones «movilidad», y en 2018 agrupa profesiones de alta escolaridad y fuerte presencia femenina (docencia, enfermería, trabajo social) cuyo salario no acompaña al nivel educativo. El modelo de 1994 aprendió que un título universitario, una ocupación profesional y la jornada completa conducen a superar el umbral, y les asigna puntuaciones altas; la realidad de 2018 les paga por debajo de él. El lado bajo, en cambio, apenas distingue por sexo (91,7 % frente a 91,2 %), porque lo determinan rasgos cuya relación con el ingreso es estable (edad, horas, escolaridad baja). Esto explica la asimetría: la deriva afecta al orden en la cola alta, que no se puede recalibrar, y deja intacta la cola baja, que sí.
 
-> **Nota de trazabilidad.** El desglose por sexo y ocupación se calculó sobre los mismos datos y artefactos que `ood_results_*.json`, pero todavía no se persiste en esos ficheros. Las demás cifras de esta sección se leen directamente de ellos.
+> **Nota de trazabilidad.** El desglose por sexo y ocupación lo recalcula `src/generate_extra_plots.py` con las funciones importadas de `05_ood_testing.py` (mismos registros, recodificación, deflación y modelo) y queda persistido en `training-pipeline/artifacts/extra_figures_report.json`, sección `concept_drift.subgroups`. Las cifras de la tabla coinciden con las persistidas hasta el último decimal. Las demás cifras de esta sección se leen de `ood_results_*.json`, y la figura `concept_drift.png` (`02_MATHEMATICS.md`, Figura 16) las muestra en un solo panel.
 
 #### Prueba 8 · Resultado esperado frente a resultado obtenido
 
@@ -329,7 +329,89 @@ El error se concentra en las mujeres y en los grupos ocupacionales más feminiza
 
 ---
 
-## 4. Resumen de la cadena de evidencia
+## 4. Trazabilidad de una partida: del clic del jugador a la predicción de la IA
+
+Las secciones 2 y 3 siguen las cifras desde el censo hasta el modelo desplegado. Esta sección sigue el camino inverso: una **petición concreta**, desde que el jugador pulsa un botón en el navegador hasta que el modelo devuelve su probabilidad y el juego muestra la escena siguiente. Cada paso indica el fichero y la función que lo ejecutan, qué dato entra, qué dato sale y qué verificación impide que el dato se altere por el camino. Al final, la sección 4.3 recorre el mismo camino con las cifras reales de una decisión de «Turno de Noche», recalculadas fuera de línea y persistidas en `training-pipeline/artifacts/extra_figures_report.json`.
+
+### 4.1. Vista general
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor J as Jugador
+    participant F as Frontend (Phaser)
+    participant B as BFF (NestJS)
+    participant C as CMS (Strapi)
+    participant A as Inferencia (FastAPI)
+    J->>F: clic en una decisión
+    F->>B: POST /game/decision {currentNodeId, decisionId}
+    B->>C: GET escena actual (año, base_profile, hidden_modifiers)
+    C-->>B: escena y decisiones
+    Note over B: x0 = base_profile<br/>x' = T_d(x0)  (inyección de contexto)<br/>x'' = deflactar(x', año)  (IPC)
+    B->>A: POST /predict + X-BFF-Token  (x'')
+    Note over A: Pydantic → Character → imputer + encoder<br/>→ Stacking.predict_proba → p → zona
+    A-->>B: {probability, zone, lower_bound, upper_bound}
+    Note over B: zona determinista → decide el modelo<br/>zona incierta → moneda: éxito si tirada < p<br/>línea de auditoría en el log
+    B->>C: GET escena siguiente (next_scene o failure_scene)
+    C-->>B: escena siguiente
+    B-->>F: StoryNode (sin hidden_modifiers ni probabilidad)
+    F-->>J: transición y nueva escena
+```
+
+### 4.2. Paso a paso
+
+| # | Componente · fichero · función | Entra | Sale | Garantía que impide alterar el dato |
+|---|---|---|---|---|
+| 1 | **Frontend** · `frontend/src/scenes/Decision.js` · `#handleChoice` → `#lockInput` | Clic sobre un `ChoiceBtn` (o fin del temporizador) | La decisión elegida | `#lockInput` desactiva todos los botones: un doble clic no puede enviar dos decisiones. La elección se anota en el historial local (`playthroughHistory.recordChoice`). |
+| 2 | **Frontend** · `Decision.js` · `#submit` → `frontend/src/api/bffClient.js` · `submitDecision` | `this.node.id`, `decision.id` | `POST /game/decision` con cuerpo `{currentNodeId, decisionId}` | El cliente **no envía ningún personaje**: no puede proponer un perfil más favorable. Si la decisión tiene `requiresMobilityCheck`, muestra «Life is weighing your chances...». Tiempo máximo de 120 s y cancelación si la escena cambia. |
+| 3 | **BFF** · `bff-api/src/infrastructure/web/validation-pipe.ts`, `dtos/submit-choice.dto.ts` | JSON del cliente | `SubmitChoiceDto` validado | `whitelist` y `forbidNonWhitelisted`: un campo no declarado devuelve `400`; sin conversiones implícitas de tipo. |
+| 4 | **BFF** · `web/controllers/game.controller.ts` · `decide` → `core/use-cases/resolve-decision.service.ts` · `execute` | `currentNodeId`, `decisionId` | Llamada al caso de uso | El controlador ignora cualquier `character` heredado: la prueba de movilidad usa solo el perfil del CMS. |
+| 5 | **BFF → CMS** · `adapters/cms/strapi-content.adapter.ts` · `getStoryNode` y `strapi-mappers.ts` | Identificador de la escena | Entidad `StoryNode` con el año, el `base_profile` de la historia y, por decisión, `requires_mobility_check` y `hidden_modifiers` | La consulta pide solo los campos necesarios. `findDecision` rechaza una decisión que la escena no ofrece (`DecisionNotFoundError`, `400`). El CMS ya validó perfil y modificadores al guardarlos (`base-profile-validation.ts`, `hidden-modifiers-validation.ts`). |
+| 6 | **BFF** · *etapa 0* · `resolve-decision.service.ts` | `StoryNode` | $x_0$ = `base_profile` | Sin perfil base, `BaseProfileRequiredError` (`422`): nunca se evalúa un personaje arbitrario. Si la decisión no exige prueba de movilidad, se salta directamente al paso 12. |
+| 7 | **BFF** · *etapa 1* · `core/domain/services/context-injection.ts` · `injectContext` | $x_0$ y los modificadores $T_d$ de la decisión | $x' = T_d(x_0)$ y la lista de ajustes | Los enteros se **suman** y los textos **reemplazan**. Cada rasgo numérico se acota al dominio de entrenamiento (edad 17–90, educación 1–16, horas 1–99) y el ajuste queda marcado como `clamped`. El perfil base nunca se modifica. |
+| 8 | **BFF** · *etapa 2* · `services/inflation-adjuster.ts` · `deflateToModelBaseYear` con `consumer-price-index.ts` | $x'$ y el año de la escena | $x''$: ganancias y pérdidas de capital en dólares de 1994 | Ecuación 14 de `02_MATHEMATICS.md`: $x^{(1994)} = x^{(t)} \cdot \mathrm{CPI}(1994)/\mathrm{CPI}(t)$. Es la misma tabla IPC-U que lee `05_ood_testing.py`. |
+| 9 | **BFF → IA** · `adapters/ai/fast-api-predictor.adapter.ts` · `assessMobility` | $x''$ (camelCase) | `POST {AI_SERVICE_URL}/predict` en snake_case, con la cabecera `X-BFF-Token` | `toPredictionPayload` solo renombra campos. Un `401`/`403` se registra como secreto incorrecto y el cliente recibe `502`; una caída o *timeout*, `503`. La respuesta se valida antes de construir `MobilityAssessment`. |
+| 10 | **IA** · `inference-api/src/infrastructure/web/security.py` · `require_bff_token` | Cabecera `X-BFF-Token` | Acceso concedido o `403` | Comparación en tiempo constante (`hmac.compare_digest`). En producción, sin secreto configurado se rechaza todo. |
+| 11 | **IA** · `web/schemas.py` · `CharacterRequest` → `to_domain`; `web/controllers.py` · `predict`; `application/predict_mobility.py`; `adapters/ml/sklearn_predictor.py` · `predict`; `domain/entities/decision_policy.py` · `zone_of` | JSON de 13 rasgos | `{probability, zone, lower_bound, upper_bound, threshold, has_mobility}` | Pydantic con `extra="forbid"` y rangos (`422` si falla) → entidad `Character` → `_to_feature_frame` aplica `imputer.joblib` y `encoder.joblib` y ordena las 106 columnas de `feature_schema.json` → `best_model.joblib` (`StackingClassifier`) devuelve $p = \sigma(b + w_{\text{hgb}}F_{\text{hgb}} + w_{\text{lr}}F_{\text{lr}})$ (Ecuación 8) → `zone_of` aplica la banda leída de `traceability_report.json`: `mobility` si $p \ge 0{,}78$, `no_mobility` si $p \le 0{,}23$, `uncertain` en otro caso. La predicción se registra en el log del servicio. |
+| 12 | **BFF** · *etapa 4* · `services/systemic-luck.ts` · `resolveMobility`; `adapters/random/crypto-random-source.adapter.ts` | `MobilityAssessment` | `hasMobility`, `decidedBy` (`model` o `luck`) y la tirada | En las zonas deterministas decide el modelo y no se lanza moneda. En la zona incierta, `crypto.randomInt` produce una tirada uniforme en $[0, 1)$ y hay movilidad si **tirada < p**. Una tirada fuera de rango lanza `InvalidRandomValueError`. |
+| 13 | **BFF** · `resolve-decision.service.ts` · línea de auditoría | Todo lo anterior | `Mobility check node=… decision=… year=… p=… zone=… decidedBy=… roll=… result=… modifiers=[…] modelInput={…}` | La línea contiene el perfil exacto enviado a la IA: cualquier tirada puede reproducirse fuera de línea con los artefactos del *pipeline* (así se obtuvo la sección 3.5). |
+| 14 | **BFF → CMS** · `core/domain/entities/decision.entity.ts` · `resolveNextSceneId`; `getStoryNode` | `hasMobility` | `next_scene` si hay movilidad; `failure_scene` si no | Una decisión sin prueba de movilidad es una arista fija y siempre lleva a `next_scene`. |
+| 15 | **BFF → Frontend** · `web/presenters/story-node.presenter.ts` · `presentStoryNode` | `StoryNode` siguiente | JSON de la escena, con el umbral de movilidad en dólares del año (`economy`) | El presentador **no envía** `hidden_modifiers`, el perfil base ni la probabilidad: el jugador no puede leer ni manipular las reglas. |
+| 16 | **Frontend** · `bffClient.js` · `isStoryNode`; `Decision.js` · `scene.restart` | JSON de la escena | Escena renderizada | Una respuesta con forma inválida se rechaza como error `parse` en lugar de mostrar una escena rota. Tras el fundido, la escena se reinicia con el nodo nuevo. |
+
+### 4.3. Ejemplo numérico: «Andrés se queda → enfermera» (2033)
+
+La decisión «Graduarte de enfermería y concursar por la plaza del hospital» de «Turno de Noche» se recalculó fuera de línea con los artefactos de producción. Las cifras proceden de `extra_figures_report.json` (sección `turno_de_noche`), generado por `src/generate_extra_plots.py`.
+
+| Etapa | Valor |
+|---|---|
+| Perfil base $x_0$ (CMS, 2026) | Mujer de 24 años, `Self-emp-not-inc`, `Some-college` (10), `Married-civ-spouse`, `Transport-moving`, `Wife`, 72 h/semana, `Columbia`, capital 0. Probabilidad propia: **0,112** («sin movilidad» determinista) |
+| Modificadores $T_d$ | `age +7`, `education-num +3`, `hours-per-week −24`; `workclass → Private`, `occupation → Prof-specialty`, `education → Bachelors` |
+| Perfil inyectado $x'$ | 31 años, `Private`, `Bachelors` (13), `Prof-specialty`, 48 h/semana; resto sin cambios; ningún rasgo acotado |
+| Deflactor 2033 → 1994 | $\mathrm{CPI}(1994)/\mathrm{CPI}(2033) = 0{,}3783$; sin efecto aquí, porque el capital es 0 |
+| *Log-odds* de los modelos base | $F_{\text{hgb}} = -0{,}2579$; $F_{\text{lr}} = -0{,}4234$ |
+| Ensamble (Ecuación 8) | $F = 0{,}0114 + 0{,}8848 \cdot (-0{,}2579) + 0{,}1013 \cdot (-0{,}4234) = -0{,}2597$ |
+| Probabilidad | $p = \sigma(-0{,}2597) = $ **0,4354**, idéntica a `predict_proba` y al valor registrado en juego (sección 3.5) |
+| Zona | $0{,}23 < 0{,}4354 < 0{,}78$ → `uncertain`: decide la moneda |
+| Moneda | Con una tirada de 0,30 hay movilidad (0,30 < 0,4354) y el BFF carga «Bata blanca» (`next_scene`); con 0,60 no la hay y carga «La plaza fue para otra» (`failure_scene`). En 20 partidas reales salieron 10 éxitos frente a 8,7 esperados (sección 3.5). |
+
+La misma enfermera sin Andrés (`marital-status → Married-spouse-absent`, `relationship → Unmarried`) baja a **0,0818**, por debajo del corte de 0,23: el BFF responde «no» sin lanzar moneda. La figura `turno_de_noche_trace.png` muestra los seis caminos frente a la banda (`02_MATHEMATICS.md`, Figura 17).
+
+#### Prueba 9 · Resultado esperado frente a resultado obtenido
+
+| Verificación | Resultado esperado | Fundamento del valor esperado | Resultado obtenido |
+|---|---|---|---|
+| Composición del ensamble para un perfil del juego | $\sigma(b + w^\top F) =$ `predict_proba` | Ecuación 8 | **0,435443 = 0,435443** |
+| Seis caminos recalculados frente al log del BFF | Iguales hasta la cuarta cifra | La inyección y la deflación son deterministas | **0,4354 · 0,3733 · 0,0818 · 0,0112 · 0,2564 · 0,0626**, idénticos a la sección 3.5 |
+| Zonas de los seis caminos | Moneda, moneda, «no», «no», moneda, «no» | Banda [0,23; 0,78] | **Idénticas** |
+
+**Justificación matemática.** La probabilidad del juego no es una cifra opaca devuelta por un servicio: es la composición explícita de dos puntuaciones aditivas con los pesos registrados en `model_comparison.json`, y puede recalcularse a mano desde la línea de auditoría.
+
+**Justificación narrativa.** El jugador solo ve un botón y un desenlace, pero detrás de cada clic hay una cadena de dieciséis pasos en la que nadie, ni el cliente ni el propio BFF, puede cambiar el perfil, la moneda ni las reglas sin dejar rastro.
+
+---
+
+## 5. Resumen de la cadena de evidencia
 
 | Artefacto | Etapa | Pregunta que responde | Hereda de |
 |---|---|---|---|
@@ -338,10 +420,12 @@ El error se concentra en las mujeres y en los grupos ocupacionales más feminiza
 | `model_comparison.json` | 03 · Entrenamiento | ¿Qué modelos se compararon y cómo se construyó y justificó el ensamble desplegado? | `balancing_report.json` |
 | `traceability_report.json` | 04 · Evaluación | ¿Cuál es el rendimiento final y con qué política opera en producción? | `model_comparison.json` |
 | `ood_results_CA.json`, `ood_results_NY.json` | 05 · Prueba fuera de distribución | ¿Cómo se comporta el modelo congelado en la ACS 2018 y qué política restituye el 95 %? | `traceability_report.json` y los artefactos del modelo |
+| `advanced_metrics_report.json` | Evaluación avanzada (`advanced_metrics.py`) | ¿Cuánta confianza merecen las métricas (bootstrap, validación cruzada, pruebas estadísticas) y cuál es el techo de exactitud de los datos? | `model_comparison.json`, `traceability_report.json` y los conjuntos procesados, sin reentrenar el modelo desplegado |
+| `extra_figures_report.json` | Figuras complementarias (`generate_extra_plots.py`) | ¿Qué cifras sostienen las figuras 12 a 17, el desglose por sexo y ocupación y el ejemplo de la sección 4.3? | Todos los anteriores, sin reentrenar |
 
 ---
 
-## 5. Síntesis: resultados esperados frente a resultados obtenidos
+## 6. Síntesis: resultados esperados frente a resultados obtenidos
 
 | Prueba | Qué se verifica | Resultado esperado | Resultado obtenido | ¿Cumple? |
 |---|---|---|---|---|
@@ -353,5 +437,6 @@ El error se concentra en las mujeres y en los grupos ocupacionales más feminiza
 | 6 | Simulación de monedas | Centro 85,22 %; anchura ≤ 1,00 pp | Centro 85,21 %; anchura 0,94 pp | Sí |
 | 7 | Identidad con producción | Mismo modelo, banda y umbral | Idénticos; 403 sin secreto | Sí |
 | 3.5 | Juego real (Turno de Noche) | p calculadas fuera de línea; éxitos ≈ 20 p | Coinciden a tres decimales; dentro de ± 2 desviaciones típicas | Sí |
+| 9 | Petición completa clic → predicción (sección 4) | $\sigma(b + w^\top F)$ = `predict_proba`; seis caminos iguales al log | 0,435443 = 0,435443; seis caminos idénticos | Sí |
 | 8 | *Concept drift* (ACS 2018): «sin movilidad» recalibrada | ≥ 95 % en la mitad reservada | 95,34 % (CA) y 95,81 % (NY) | Sí |
 | 8 | *Concept drift* (ACS 2018): «movilidad» | ≥ 95 % con algún corte | Máximo 80,12 % / 79,55 %; error concentrado en mujeres y ocupaciones feminizadas | No: se abstiene y decide la moneda |

@@ -1,3 +1,5 @@
+> **Estado del documento: borrador de referencia, no normativo.** La versión oficial del artículo se entrega por separado en PDF/Word. Este fichero se conserva bajo control de versiones como borrador de trabajo: registra la redacción, las ecuaciones y las cifras tal como estaban al cerrar el Hito 2 (octubre de 2026). Si una cifra de este borrador difiere de la de un artefacto del *pipeline*, prevalece el artefacto. La documentación técnica vigente está en `ai-service/docs/01_TRACEABILITY.md` a `06_METHODOLOGICAL_DEFENSE.md`.
+
 # *Unfair Life*: un modelo calibrado de movilidad social con clasificación selectiva y su validación fuera de distribución en la *American Community Survey* de 2018
 
 **Daniel Felipe Ordoñez Amaya**

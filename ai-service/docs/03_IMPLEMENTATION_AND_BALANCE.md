@@ -28,7 +28,7 @@ El balanceo no se adoptó por defecto, sino que se sometió a un **estudio de ab
 | SVM (RBF, calibrada) | **0,757** | 0,736 | **0,023** | 0,105 |
 | K vecinos más cercanos | **0,631** | 0,597 | **0,044** | 0,121 |
 
-La evidencia apunta en una sola dirección. En **las cinco familias sin excepción**, el entrenamiento con SMOTE redujo la capacidad discriminativa del modelo (la precisión promedio) y multiplicó su error de calibración esperado (ECE), en algunos casos por más de diez.
+La evidencia apunta en una sola dirección. En **las cinco familias sin excepción**, el entrenamiento con SMOTE redujo la capacidad discriminativa del modelo (la precisión promedio) y multiplicó su error de calibración esperado (ECE), en algunos casos por más de diez. La Figura 12 de `02_MATHEMATICS.md` (`model_comparison.png`) muestra las tres comparaciones en un solo gráfico.
 
 ### 1.3. Por qué la calibración es innegociable
 
@@ -37,6 +37,19 @@ El deterioro de la calibración es la razón decisiva del rechazo, y se explica 
 Forzar una proporción artificial de 50/50 rompe esa correspondencia. Al ver tantos casos positivos como negativos durante el entrenamiento, el modelo aprende que la movilidad es mucho más frecuente de lo que realmente es. La predicción media de los modelos entrenados con SMOTE ascendió a **0,330**, cuando la tasa real de movilidad es **0,239**. En el contexto del juego, esto equivaldría a otorgar movilidad social a personajes que en la realidad no la tendrían. El resultado sería una simulación sistemáticamente optimista que contradiría el propósito mismo del proyecto: exponer la desigualdad estructural.
 
 Por estas razones, **el modelo desplegado se entrenó con la distribución natural 76/24**. Esto incluye a sus tres componentes: el modelo desplegado es un ensamble Stacking (véase `02_MATHEMATICS.md`, Ecuación 8, y la selección de sus componentes en `04_MODEL_SELECTION.md`), y tanto sus dos modelos base como su segunda capa se ajustaron exclusivamente sobre datos sin balancear. El ensamble se construyó, además, para preservar la calibración: combina sus modelos en escala logit y redujo el error de calibración esperado en validación de 0,0096 a 0,0073. SMOTE se aplicó, se midió y se documentó, de modo que el criterio de balanceo se aborda de forma rigurosa. Su rechazo es una decisión metodológica fundamentada en evidencia empírica, no una omisión.
+
+### 1.4. Cómo se trata por igual a las dos clases sin alterar los datos
+
+Rechazar SMOTE no significa ignorar el desequilibrio. El proyecto lo compensa en cuatro puntos del ciclo de vida, todos sin inventar personas ni distorsionar las probabilidades:
+
+| Dónde | Mecanismo | Efecto sobre el desequilibrio 76/24 |
+|---|---|---|
+| Partición (`02_balancer.py`) | División estratificada 60/20/20 | Los tres subconjuntos conservan la tasa del 23,9 % con una desviación máxima de 0,00004 |
+| Selección (`03_trainer.py`) | Precisión promedio como criterio, no exactitud | Un modelo que predijera siempre «sin movilidad» tendría un 76 % de exactitud, pero una precisión promedio de solo 0,24 |
+| Política (`04_evaluator.py`) | Restricción del 95 % **para cada clase por separado**, con al menos 30 casos por decisión | La clase minoritaria no puede quedar sacrificada: «movilidad» debe acertar al 95 % igual que «sin movilidad» |
+| Juego (BFF) | Moneda ponderada por una probabilidad calibrada | Cada clase aparece en la partida con su frecuencia real, ni más ni menos |
+
+En términos de teoría de la decisión, el reequilibrio se traslada de los **datos** a la **regla de decisión**. Entrenar con una proporción artificial $\pi'$ en lugar de la real $\pi$ multiplica los *odds* por $\frac{\pi'/(1-\pi')}{\pi/(1-\pi)} \approx 3{,}2$, y esa distorsión llegaría intacta a la moneda del juego. Fijar en cambio un umbral distinto para cada decisión consigue el mismo objetivo, que es no sacrificar la clase minoritaria, sin tocar la probabilidad. Este es el sentido en que el conjunto está **balanceado acorde al problema**: el balanceo sintético se construyó (44 530 filas, 50/50) y se evaluó, y la evidencia mostró que, en un sistema que usa la probabilidad como moneda, el equilibrio correcto se impone en la decisión y no en los datos.
 
 ---
 
@@ -59,11 +72,11 @@ El ensamble Stacking opera bajo una política de **clasificación selectiva**: s
 | «Sin movilidad» (probabilidad ≤ 0,23) | **95,41 %** | 94,87 % – 95,90 % |
 | Exactitud conjunta sobre los casos decididos | **95,45 %** | 94,94 % – 95,90 % |
 
-**Ambas** decisiones absolutas del modelo superan el umbral del 95 %, no solo una de ellas, y también lo supera la exactitud combinada sobre todos los casos decididos. La banda se fijó con un criterio declarado de antemano, utilizando solo el conjunto de validación: maximizar la cobertura con la condición de que las dos decisiones alcanzaran al menos un 95 % de precisión, cada una respaldada por un mínimo de 30 casos. Que los resultados en el conjunto de prueba reproduzcan ese nivel demuestra que la política generaliza y no está sobreajustada.
+**Ambas** decisiones absolutas del modelo superan el umbral del 95 %, no solo una de ellas, y también lo supera la exactitud combinada sobre todos los casos decididos. Por rigor conviene precisar el alcance estadístico: las tres estimaciones puntuales superan el 95 %, y el remuestreo *bootstrap* de 2000 iteraciones sitúa la exactitud sobre los casos decididos entre el 94,98 % y el 95,92 %. El límite inferior de Wilson de «sin movilidad» (94,87 %) queda unas décimas por debajo del 95 %, como corresponde a una restricción fijada exactamente en ese nivel: la garantía es que el modelo opera **en** el 95 %, no que lo supere con un margen arbitrario. El análisis completo (intervalos exactos, probabilidad posterior de cumplir el 95 %, tamaño muestral necesario y coste de una banda conservadora) está en `06_METHODOLOGICAL_DEFENSE.md`, sección 4. La banda se fijó con un criterio declarado de antemano, utilizando solo el conjunto de validación: maximizar la cobertura con la condición de que las dos decisiones alcanzaran al menos un 95 % de precisión, cada una respaldada por un mínimo de 30 casos. Que los resultados en el conjunto de prueba reproduzcan ese nivel demuestra que la política generaliza y no está sobreajustada.
 
 ### 2.3. La moneda ponderada en la zona de incertidumbre
 
-En el 25,50 % restante de los casos, con probabilidades entre 0,23 y 0,78, el perfil censal no determina el destino de la persona con suficiente confianza. Allí, por diseño del juego, el modelo no emite un veredicto absoluto: el BFF lanza una **moneda ponderada** por la probabilidad estimada, mecanismo que el juego denomina **suerte sistémica**. Esta zona no es un fallo del modelo, sino el reconocimiento explícito de que, para una parte de la sociedad, el desenlace depende de factores que ningún dato censal recoge.
+En el 25,50 % restante de los casos, con probabilidades entre 0,23 y 0,78, el perfil censal no determina el destino de la persona con suficiente confianza. Allí, por diseño del juego, el modelo no emite un veredicto absoluto: el BFF lanza una **moneda ponderada** por la probabilidad estimada, mecanismo que el juego denomina **suerte sistémica**. Esta zona no es un fallo del modelo, sino el reconocimiento explícito de que, para una parte de la sociedad, el desenlace depende de factores que ningún dato censal recoge. Que ese límite es una propiedad de los datos, y no del algoritmo, se demuestra en `06_METHODOLOGICAL_DEFENSE.md`, secciones 1 y 2: el 35 % de las personas que comparten un perfil censal idéntico con otras tiene destinos distintos.
 
 Al incorporar estos lanzamientos aleatorios, la **exactitud global esperada** sobre la totalidad de los jugadores es del **85,22 %**. El valor se ha confirmado mediante 2000 simulaciones independientes del juego, cuyos resultados se sitúan entre el 84,74 % y el 85,68 %. Esta cifra es inferior a la precisión determinista por una razón estructural: dentro de la banda, el resultado lo decide intencionadamente el azar ponderado y no el veredicto del modelo.
 
@@ -75,7 +88,22 @@ El criterio de precisión igual o superior al 95 % **se cumple estrictamente all
 
 ## 3. Las diez funcionalidades de la inteligencia artificial
 
-Las funcionalidades siguientes están implementadas y operativas en el servicio de inferencia (`ai-service/inference-api`), en el BFF (`bff-api`) o en el *pipeline* de entrenamiento (`ai-service/training-pipeline`), según se indica en cada caso.
+Las funcionalidades siguientes están implementadas y operativas en el servicio de inferencia (`ai-service/inference-api`), en el BFF (`bff-api`) o en el *pipeline* de entrenamiento (`ai-service/training-pipeline`), según se indica en cada caso. La tabla resume dónde vive cada una y qué prueba la verifica; el recorrido completo de una petición, que encadena casi todas, se describe paso a paso en `01_TRACEABILITY.md`, sección 4.
+
+| # | Funcionalidad | Componente | Evidencia verificable |
+|---|---|---|---|
+| 1 | Predicción asegurada (`POST /predict` + `X-BFF-Token`) | IA + BFF | `fast-api-predictor.adapter.spec.ts`; `scripts/smoke_test.py`; respuesta `403` sin secreto (`01_TRACEABILITY.md`, prueba 7) |
+| 2 | Salud y monitoreo (`GET /health`) | IA + BFF | Nombre del modelo y banda servidos, idénticos al informe (prueba 7) |
+| 3 | Validación estricta de esquemas | IA + BFF | `game.controller.spec.ts`, `test/game.e2e-spec.ts`; Pydantic `extra="forbid"` |
+| 4 | Arranque *fail-fast* ante artefactos incoherentes | IA | `_validate_consistency` en `sklearn_predictor.py` |
+| 5 | Moneda ponderada alineada con el modelo | BFF + *pipeline* | `economy.spec.ts` (límite 0,599 / 0,600); 2000 partidas simuladas (Figura 14) |
+| 6 | Deflación por IPC a dólares de 1994 | BFF | `economy.spec.ts`; Figura 15 |
+| 7 | Decisión selectiva por banda de incertidumbre | IA + BFF | `decision_policy.py` · `zone_of`; Figura 13 |
+| 8 | Auditoría de cada tirada en el log | BFF + IA | Línea `Mobility check …` de `resolve-decision.service.ts`; reproducida en `01_TRACEABILITY.md`, secciones 3.5 y 4.3 |
+| 9 | CORS estricto | IA + BFF | `http.config.spec.ts`; `cors.py` |
+| 10 | Explicabilidad SHAP serializada | *Pipeline* | Figuras 9 a 11; exactitud local verificada ($7{,}6 \times 10^{-8}$) |
+
+El 27 de octubre de 2026, la batería de pruebas del BFF (`npm test`) ejecutó **255 pruebas en 17 ficheros, todas superadas**.
 
 ### 3.1. Endpoint de predicción asegurada (`POST /predict` con autenticación)
 
@@ -203,7 +231,7 @@ La interpretación es coherente con la brecha salarial de las profesiones femini
 
 Este hallazgo refuerza el marco teórico del proyecto en lugar de debilitarlo. La explicabilidad SHAP (funcionalidad 3.10) ya mostró que el modelo absorbió la penalización por ser mujer del censo de 1994; la prueba de 2018 muestra que, fuera de ese censo, la desigualdad de género reaparece como el principal motivo por el que el modelo promete movilidades que no se cumplen.
 
-> El desglose por sexo y ocupación se calculó con los mismos registros, recodificación y artefactos que `ood_results_*.json`, pero todavía no se persiste en esos ficheros.
+> El desglose por sexo y ocupación se calcula con los mismos registros, recodificación y artefactos que `ood_results_*.json` (funciones importadas de `05_ood_testing.py`) y queda persistido en `training-pipeline/artifacts/extra_figures_report.json`, sección `concept_drift.subgroups`. La Figura 16 de `02_MATHEMATICS.md` lo representa.
 
 ---
 

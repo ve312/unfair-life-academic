@@ -73,7 +73,7 @@ Se seleccionaron **cuatro modelos principales**, uno por paradigma, más la refe
 - El bosque aleatorio y la SVM calibrada alcanzaron una discriminación intermedia y una calibración peor que la de los dos anteriores.
 - k-NN quedó último en todas las métricas, como corresponde a un método local en 106 dimensiones.
 
-Los cinco modelos se entrenaron también con la copia balanceada por SMOTE, y en los cinco el balanceo empeoró la precisión promedio y la calibración (`01_TRACEABILITY.md`, sección 2.3). Una sexta variante, el *gradient boosting* con pesos de clase, alcanzó la misma discriminación (0,830) con una calibración diez veces peor (ECE de 0,100), lo que confirma que cualquier reequilibrio artificial de las clases distorsiona las probabilidades.
+Los cinco modelos se entrenaron también con la copia balanceada por SMOTE, y en los cinco el balanceo empeoró la precisión promedio y la calibración (`01_TRACEABILITY.md`, sección 2.3). Una sexta variante, el *gradient boosting* con pesos de clase, alcanzó la misma discriminación (0,830) con una calibración diez veces peor (ECE de 0,100), lo que confirma que cualquier reequilibrio artificial de las clases distorsiona las probabilidades. La Figura 12 de `02_MATHEMATICS.md` (`model_comparison.png`) reúne en tres paneles la precisión promedio, el ECE y la probabilidad media de los diez candidatos y del ensamble.
 
 ---
 
@@ -90,6 +90,8 @@ El ensamble mantuvo la discriminación del mejor modelo (precisión promedio de 
 | HGB + RL + bosque aleatorio + k-NN | 0,830 | 0,0079 | k-NN: −0,0005 | No | 6,91 MB |
 
 Añadir más modelos no mejoró la discriminación, empeoró ligeramente la calibración, rompió la explicabilidad exacta y multiplicó por catorce el tamaño del modelo. La SVM no se incluyó en la ablación porque, además de quedar por debajo en todas las métricas, su coste de entrenamiento se habría multiplicado por los cinco pliegues del *stacking*. Por el principio de parsimonia, se eligió la primera capa más simple entre las de rendimiento equivalente.
+
+La comparación anterior usa una sola partición de validación. Para descartar que el orden de los modelos dependa de esa partición, `05_ADVANCED_EVALUATION.md` repite la comparación con validación cruzada estratificada repetida (5 × 2) sobre el conjunto de entrenamiento, aplica la prueba de Friedman y la prueba *t* corregida de Nadeau y Bengio, y añade curvas ROC y precisión-exhaustividad, intervalos *bootstrap* y un análisis de sensibilidad de los hiperparámetros del *gradient boosting*.
 
 ---
 

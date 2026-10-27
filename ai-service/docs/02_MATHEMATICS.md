@@ -1,6 +1,6 @@
 # Modelo Matemático y Análisis Descriptivo
 
-> **Ámbito.** Este documento expone el fundamento matemático del modelo de movilidad social de *Unfair Life* y el análisis descriptivo que respalda su validez. Diez de las catorce ecuaciones proceden de los ficheros de `ai-service/training-pipeline/artifacts/latex/`. Las otras cuatro (Ecuaciones 4 a 7) formalizan los modelos base y el meta-learner con la configuración exacta de `src/03_trainer.py`. Cada figura procede de `ai-service/training-pipeline/artifacts/figures/`. Ecuaciones y figuras son generadas por el notebook `notebooks/01_math_and_eda.ipynb` a partir de los artefactos del *pipeline*, sin reentrenar nada. La procedencia de cada cifra se documenta en [`01_TRACEABILITY.md`](01_TRACEABILITY.md).
+> **Ámbito.** Este documento expone el fundamento matemático del modelo de movilidad social de *Unfair Life* y el análisis descriptivo que respalda su validez. Diez de las catorce ecuaciones proceden de los ficheros de `ai-service/training-pipeline/artifacts/latex/`. Las otras cuatro (Ecuaciones 4 a 7) formalizan los modelos base y el meta-learner con la configuración exacta de `src/03_trainer.py`. Cada figura procede de `ai-service/training-pipeline/artifacts/figures/`. Las ecuaciones y las Figuras 1 a 11 las genera el notebook `notebooks/01_math_and_eda.ipynb`; las Figuras 12 a 17, que visualizan la banda de indecisión, la suerte sistémica, el ajuste por inflación y el *concept drift*, las genera `src/generate_extra_plots.py`, que persiste cada cifra que dibuja en `artifacts/extra_figures_report.json`. Ninguno de los dos reentrena nada: ambos leen los artefactos del *pipeline*. La procedencia de cada cifra se documenta en [`01_TRACEABILITY.md`](01_TRACEABILITY.md).
 >
 > El objetivo es justificar el criterio de evaluación según el cual **el modelo matemático cuenta con las ecuaciones explicadas, gráficos descriptivos y alta claridad**.
 
@@ -206,6 +206,8 @@ $$
 
 **Conclusión y regla derivada.** Frente al mejor modelo individual, el ensamble mantiene la precisión promedio en validación (0,830) y reduce el error de calibración esperado de 0,0096 a **0,0073**, un 24 % menos. La mejora en discriminación es marginal; la mejora en calibración es pequeña pero real, y es precisamente la propiedad que más importa a un juego que convierte la probabilidad en una moneda. Además, como $F(x)$ es una combinación afín de dos puntuaciones aditivas, el ensamble sigue siendo **exactamente explicable** (Ecuación 12). El estudio de ablación confirmó la composición elegida: añadir un bosque aleatorio o un modelo de vecinos no mejora ninguna métrica de forma apreciable, rompe la explicabilidad exacta y multiplica por catorce o más el tamaño del modelo. **Regla:** se combinan solo los modelos que aportan información, y la combinación se hace en la escala que preserva la calibración.
 
+**Ejemplo numérico.** Para la enfermera de 31 años de «Turno de Noche» (`01_TRACEABILITY.md`, sección 4.3), los modelos base devuelven $F_{\text{hgb}} = -0{,}2579$ y $F_{\text{lr}} = -0{,}4234$. El ensamble calcula $F = 0{,}0114 + 0{,}8848 \cdot (-0{,}2579) + 0{,}1013 \cdot (-0{,}4234) = -0{,}2597$ y $\hat{p} = \sigma(-0{,}2597) = 0{,}4354$, exactamente lo que devuelve `predict_proba` y lo que registró el BFF durante el juego. Los dos modelos base coinciden en el signo (ambos sitúan el caso algo por debajo del equilibrio) y el meta-learner los promedia con sus pesos.
+
 ### 2.3. Evaluación, incertidumbre y explicabilidad
 
 #### Ecuación 9 — Métricas de evaluación
@@ -276,6 +278,8 @@ $$
 
 **Conclusión y regla derivada.** En el conjunto de prueba, el ensamble decide de forma determinista el **74,50 %** de los casos, con una exactitud del **95,45 %** sobre ellos, y deja el 25,50 % restante al azar ponderado. Esta es la regla de negocio central del proyecto: **el modelo no inventa certezas que no tiene**. Cuando el perfil censal no determina el destino de una persona con alta confianza, el juego lo reconoce explícitamente y lo convierte en una tirada de dados, cuyas probabilidades siguen siendo las del modelo.
 
+**Lectura intuitiva (Figura 13).** Cada borde de la banda es el punto donde su decisión deja de alcanzar el 95 %. Al subir el corte inferior $\ell$, la decisión «sin movilidad» abarca a más personas pero acierta menos, y cruza el 95 % justo en 0,23. Al bajar el corte superior $u$, la decisión «movilidad» cruza el 95 % justo en 0,78. De las 2450 parejas $(\ell, u)$ de la rejilla, solo 506 cumplen ambas restricciones en validación, y la Ecuación 11 elige la de mayor cobertura (74,50 %). En prueba, el 65,0 % de las personas cae en «sin movilidad», donde la tasa real es del 4,6 %; el 25,5 % cae en la banda, donde es del 46,5 %, casi una moneda al aire; y el 9,5 % cae en «movilidad», donde es del 95,7 %. La banda no es un intervalo arbitrario: es la región donde el propio censo no distingue entre los dos destinos.
+
 #### Ecuación 12 — Valores de Shapley (SHAP)
 
 *Fichero de origen: `eq_shapley.tex`*
@@ -304,7 +308,7 @@ $$
 
 **Interpretación.** Mide con qué frecuencia el desenlace que vive el jugador coincide con la realidad censal del personaje, considerando a **todos** los jugadores y no solo a los decididos de forma determinista. El primer sumando cuenta los aciertos fuera de la banda, donde la decisión es fija. El segundo suma, para cada caso dentro de la banda, la probabilidad de que la moneda caiga del lado correcto: $\hat{p}_i$ si la persona tenía movilidad y $1 - \hat{p}_i$ si no la tenía.
 
-**Uso en el proyecto.** Se evaluó analíticamente sobre el conjunto de prueba y se contrastó con 2000 partidas simuladas, cuyos resultados se encuentran entre el 84,74 % y el 85,68 % (véase `01_TRACEABILITY.md`, sección 3.3).
+**Uso en el proyecto.** Se evaluó analíticamente sobre el conjunto de prueba y se contrastó con 2000 partidas simuladas, cuyos resultados se encuentran entre el 84,74 % y el 85,68 % (véase `01_TRACEABILITY.md`, sección 3.3). Como cada moneda es una Bernoulli independiente, la desviación típica de la exactitud de una partida es $\sqrt{\sum_{i \in \text{band}} \hat{p}_i(1-\hat{p}_i)}\,/\,N = 0{,}00242$; la de las 2000 partidas simuladas es 0,00244. La Figura 14 superpone esa normal analítica al histograma de las simulaciones.
 
 **Conclusión y regla derivada.** La exactitud esperada del juego es del **85,22 %**. Es inferior al 87,67 % que obtendría un clasificador convencional con umbral 0,5 sobre el mismo conjunto, y esa diferencia es intencional: es el precio de no fingir certeza donde no la hay. **Regla:** la mecánica de suerte sistémica es un compromiso deliberado y cuantificado entre fidelidad estadística y honestidad sobre la incertidumbre, no una pérdida de calidad accidental.
 
@@ -324,13 +328,13 @@ $$
 
 **Uso en el proyecto.** El ajuste lo aplica el BFF (`bff-api/src/core/domain/services/consumer-price-index.ts`) a las ganancias y pérdidas de capital, que son los únicos rasgos monetarios del modelo.
 
-**Conclusión y regla derivada.** Sin este ajuste, una ganancia de capital de 2026 se interpretaría con el poder adquisitivo de 1994 y sobrestimaría sistemáticamente la riqueza del personaje. Con él, el umbral de movilidad equivale a 73 568 USD en 2010, 105 833 USD en 2024 y 111 191 USD en 2026. **Regla:** toda cantidad monetaria se normaliza a dólares de 1994 antes de llegar al modelo, y el umbral de movilidad que ve el jugador se expresa en la moneda del año que está viviendo.
+**Conclusión y regla derivada.** Sin este ajuste, una ganancia de capital de 2026 se interpretaría con el poder adquisitivo de 1994 y sobrestimaría sistemáticamente la riqueza del personaje. Con él, el umbral de movilidad equivale a 73 568 USD en 2010, 84 719 USD en 2018, 105 833 USD en 2024, 111 191 USD en 2026 y 132 171 USD en 2033. **Ejemplo numérico.** En 2026, $\mathrm{CPI}(1994)/\mathrm{CPI}(2026) = 0{,}4497$: una ganancia de capital de 10 000 USD de 2026 llega al modelo como 4497 USD de 1994. Para un mismo perfil de referencia, la Figura 15 muestra que sin deflación la predicción entra en la zona «movilidad» con solo 5250 USD declarados, y con deflación hacen falta 11 500 USD; el cociente (2,19) reproduce, salvo la resolución de la rejilla de 250 USD, el factor $1/0{,}4497 = 2{,}22$. **Regla:** toda cantidad monetaria se normaliza a dólares de 1994 antes de llegar al modelo, y el umbral de movilidad que ve el jugador se expresa en la moneda del año que está viviendo.
 
 ---
 
 ## 3. Índice de gráficos descriptivos
 
-Las figuras se encuentran en `ai-service/training-pipeline/artifacts/figures/`. Son diez ficheros: el histograma con la banda de incertidumbre y la curva precisión-exhaustividad comparten el fichero `decision_policy.png` como dos paneles de una misma figura.
+Las figuras se encuentran en `ai-service/training-pipeline/artifacts/figures/`. Son dieciséis ficheros. Los diez primeros los genera el notebook; en ellos, el histograma con la banda de incertidumbre y la curva precisión-exhaustividad comparten el fichero `decision_policy.png` como dos paneles de una misma figura. Los seis restantes (Figuras 12 a 17, sección 3.5) los genera `src/generate_extra_plots.py`. Las seis figuras de evaluación estadística (curvas ROC y precisión-exhaustividad, validación cruzada, capacidad, residuos, techo de exactitud y garantía del 95 %) se describen en [`05_ADVANCED_EVALUATION.md`](05_ADVANCED_EVALUATION.md).
 
 ### 3.1. Análisis exploratorio de datos
 
@@ -443,7 +447,68 @@ Representa, para la edad y para los años de educación, la contribución SHAP f
 
 Que el modelo haya aprendido relaciones no lineales y plausibles, y no artefactos de los datos, constituye una evidencia sustantiva de su validez.
 
-> **Nota sobre la numeración.** Las figuras se numeran del 1 al 11 porque el histograma y la curva precisión-exhaustividad se describen por separado, pero corresponden a los diez ficheros PNG generados por el notebook.
+> **Nota sobre la numeración.** Las Figuras 1 a 11 corresponden a los diez ficheros PNG del notebook, porque el histograma y la curva precisión-exhaustividad comparten fichero; las Figuras 12 a 17 corresponden a los seis ficheros de `generate_extra_plots.py`.
+
+### 3.5. Figuras complementarias: banda, suerte, inflación y deriva
+
+Estas seis figuras hacen visibles los mecanismos menos intuitivos del modelo. Las genera `src/generate_extra_plots.py`, que importa la lógica exacta de `04_evaluator.py` (búsqueda de la banda, rejillas y simulación de monedas) y de `05_ood_testing.py` (carga, recodificación y deflación de la ACS 2018) en lugar de reimplementarla. Antes de dibujar, el *script* recalcula la banda con `choose_band` y comprueba que coincide con la de `traceability_report.json`; también recalcula las 2000 partidas y comprueba que su rango coincide con el registrado. Todas las cifras de las figuras quedan en `artifacts/extra_figures_report.json`.
+
+#### Figura 12 — Comparación de modelos: distribución natural frente a SMOTE
+
+**Fichero:** `model_comparison.png`
+
+Tres paneles sobre el conjunto de validación, para las cinco familias entrenadas con la distribución natural (azul) y con SMOTE (dorado): precisión promedio, error de calibración esperado y probabilidad media predicha. Las líneas discontinuas marcan el ensamble desplegado y la tasa real de movilidad (0,239).
+
+**Qué demuestra.** Resume en una sola imagen la decisión sobre el balanceo y la elección del ensamble. SMOTE no mejora la discriminación de ninguna familia, multiplica su error de calibración (de 0,008 a 0,112 en la regresión logística) y eleva la probabilidad media muy por encima de la tasa real (entre 0,30 y 0,35 frente a 0,239). El ensamble iguala la mejor precisión promedio (0,8303) con el menor ECE de todos (0,0073) y una probabilidad media (0,242) prácticamente igual a la real. Complementa a las Figuras 3 y 4 y a la Ecuación 1.
+
+#### Figura 13 — Anatomía de la banda de indecisión
+
+**Fichero:** `band_anatomy.png`
+
+1. **Precisión de cada decisión determinista según su corte**, en validación (línea continua) y en prueba (discontinua), con el suelo del 95 % y la banda sombreada.
+2. **Mapa de las bandas factibles:** cada celda es una pareja $(\ell, u)$ de la rejilla de la Ecuación 11, coloreada por su cobertura; las celdas en blanco incumplen alguna de las dos restricciones del 95 %. La estrella marca la banda elegida.
+3. **Las tres zonas en prueba:** proporción de personas, tasa real de movilidad y probabilidad media predicha en cada zona.
+
+**Qué demuestra.** Hace intuitiva la Ecuación 11. La banda $[0{,}23;\ 0{,}78]$ no se fijó a ojo: cada borde está donde la curva de su decisión corta el 95 %, y la estrella está en la esquina de la región factible que maximiza la cobertura. Que las curvas de prueba sigan a las de validación demuestra que la banda generaliza. El tercer panel da el sentido narrativo: fuera de la banda el desenlace es casi seguro (4,6 % y 95,7 % de movilidad real), y dentro de ella es casi una moneda al aire (46,5 %), que es exactamente lo que el juego hace allí.
+
+#### Figura 14 — Simulación de la suerte sistémica
+
+**Fichero:** `systemic_luck_simulation.png`
+
+El panel izquierdo es el histograma de las 2000 partidas simuladas sobre los 9758 personajes de prueba (semilla 42), con el valor esperado analítico de la Ecuación 13, la normal que predice su varianza y el rango que contiene al 95 % de las partidas. El panel derecho compara tres exactitudes: la de los casos decididos (95,45 %), la de todos los jugadores con la moneda (85,22 %) y la de un clasificador convencional con umbral 0,5 (87,67 %).
+
+**Qué demuestra.** La suerte es aleatoria para cada jugador y predecible para el conjunto: el histograma se centra en el valor analítico y su anchura es la que predice la teoría. El panel derecho muestra en qué zona se cumple el 95 % y cuánto cuesta, deliberadamente, no fingir certeza dentro de la banda (Ecuación 13).
+
+#### Figura 15 — Ajuste por inflación
+
+**Fichero:** `inflation_adjustment.png`
+
+1. El IPC-U oficial hasta 2024 y su proyección al 2,5 % anual, con 1994 marcado como la moneda del modelo.
+2. El umbral de movilidad (50 000 USD de 1994) expresado en dólares de cada año, con los años de las historias marcados.
+3. La probabilidad que devuelve el modelo para un mismo personaje de 2026 según la ganancia de capital declarada, con deflación (como hace el BFF) y sin ella.
+
+**Qué demuestra.** El tercer panel es el argumento de la Ecuación 14. Sin deflación, el modelo lee dólares de 2026 como si fueran de 1994, y el personaje alcanza la zona «movilidad» con una ganancia de 5250 USD; con deflación necesita 11 500 USD. La curva verde es la gris desplazada a la derecha por el factor $1/0{,}4497 = 2{,}22$. Sin el ajuste, el juego regalaría movilidad a cualquier personaje contemporáneo con algo de capital.
+
+#### Figura 16 — *Concept drift*: el modelo de 1994 frente a la ACS 2018
+
+**Fichero:** `concept_drift.png`
+
+Entre dos poblaciones puede cambiar la tasa base $P(Y)$ (*prior shift*), la distribución de los perfiles $P(X)$ (*covariate shift*) o la relación entre ambos, $P(Y \mid X)$ (*concept drift*). Solo el último invalida un clasificador bien calibrado, porque cambia la respuesta correcta para un mismo perfil. La figura tiene cuatro paneles sobre 195 665 personas de California y 103 021 de Nueva York (`01_TRACEABILITY.md`, sección 3.6):
+
+1. **Diagramas de fiabilidad** del modelo congelado en el censo de 1994 (prueba) y en la ACS 2018.
+2. **Precisión de «movilidad» según el corte superior** $u$.
+3. **Precisión de «sin movilidad» según el corte inferior** $\ell$, con los cortes recalibrados de 0,08 (CA) y 0,07 (NY).
+4. **Precisión de «movilidad» por sexo y grupo ocupacional** con la banda congelada.
+
+**Qué demuestra.** La tasa base apenas cambió (23,9 % en 1994 y 23,5 % en CA), pero en 2018 los puntos de fiabilidad caen por debajo de la diagonal a partir de 0,5: para un mismo perfil, la probabilidad real de superar el umbral es menor. Es la firma del *concept drift*. El segundo panel muestra que **ningún** corte superior devuelve a 2018 al 95 % (el máximo ronda el 80 %): el error es de orden, no de umbral. El tercero muestra que el corte inferior sí puede moverse para recuperar el 95 %. El cuarto localiza el error: la precisión de «movilidad» es del 59 % (CA) y del 51 % (NY) para las mujeres, frente al 83 % y al 80 % de los hombres, y cae al 44 % y al 42 % en *Adm-clerical*. El desglose queda persistido en `extra_figures_report.json` (`concept_drift.subgroups`).
+
+#### Figura 17 — Una historia rejugada fuera de línea: «Turno de Noche»
+
+**Fichero:** `turno_de_noche_trace.png`
+
+Probabilidad que devuelve el modelo para el perfil base de Daniela y para los seis caminos de la historia, tras aplicar los modificadores ocultos de cada decisión (inyección de contexto) y la deflación de 2033, frente a la banda de indecisión.
+
+**Qué demuestra.** Conecta las ecuaciones con el juego. Los modificadores de cada decisión llevan a Daniela dentro de la banda mientras la familia se mantiene unida (0,435, 0,373 y 0,256: decide la moneda) y fuera de ella cuando la migración rompe el hogar (0,082, 0,011 y 0,063: «no» determinista). Las seis probabilidades coinciden hasta la cuarta cifra con las registradas por el BFF durante el juego real (`01_TRACEABILITY.md`, secciones 3.5 y 4.3).
 
 ---
 
@@ -452,5 +517,5 @@ Que el modelo haya aprendido relaciones no lineales y plausibles, y no artefacto
 El modelo matemático de *Unfair Life* cumple el criterio de contar con **ecuaciones explicadas, gráficos descriptivos y alta claridad** por tres motivos:
 
 1. **Ecuaciones explicadas.** Cada una de las catorce ecuaciones se presenta junto con su interpretación, su uso concreto en el proyecto y la regla de negocio que se deriva de ella. Cada modelo de aprendizaje tiene su propia formulación (Ecuaciones 2 a 7) antes de la ecuación general del ensamble (Ecuación 8). Ninguna es decorativa: todas condicionan una decisión verificable del sistema, desde el rechazo de SMOTE y la composición del ensamble hasta la normalización monetaria por inflación.
-2. **Gráficos descriptivos.** Las figuras cubren el ciclo completo: la existencia de señal en los datos (Figuras 1 y 2), la decisión sobre el balanceo (Figuras 3 y 4), el rendimiento y la política de decisión sobre datos no vistos (Figuras 5 a 8) y la explicabilidad del razonamiento del modelo (Figuras 9 a 11).
+2. **Gráficos descriptivos.** Las diecisiete figuras cubren el ciclo completo: la existencia de señal en los datos (Figuras 1 y 2), la decisión sobre el balanceo y la selección de modelos (Figuras 3, 4 y 12), el rendimiento y la política de decisión sobre datos no vistos (Figuras 5 a 8), la explicabilidad del razonamiento del modelo (Figuras 9 a 11) y los mecanismos que el juego construye sobre él: la banda de indecisión (Figura 13), la suerte sistémica (Figura 14), el ajuste por inflación (Figura 15), la robustez ante el *concept drift* (Figura 16) y su aplicación a una historia concreta (Figura 17).
 3. **Alta claridad y coherencia.** Las conclusiones de las ecuaciones y las de los gráficos se refuerzan mutuamente, y todas las cifras proceden de artefactos generados automáticamente y trazables (véase `01_TRACEABILITY.md`). Lo que este documento describe es, por tanto, exactamente el modelo que opera en producción.
