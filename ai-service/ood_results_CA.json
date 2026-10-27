@@ -1,0 +1,274 @@
+{
+  "generated_at_utc": "2026-10-25 19:16:01",
+  "dataset": {
+    "source": "folktables ACSDataSource (ACS PUMS, 1-Year, person)",
+    "state": "CA",
+    "survey_year": 2018,
+    "raw_records": 378817,
+    "evaluated_records": 195665,
+    "filter": "ACSIncome: AGEP > 16, PINCP > 100, WKHP > 0, PWGTP >= 1"
+  },
+  "temporal_normalisation": {
+    "cpi_source": "bff-api\\src\\core\\domain\\services\\consumer-price-index.ts",
+    "deflator_to_1994": 0.5901866534983095,
+    "adjinc_applied": true,
+    "target": "PINCP * ADJINC * deflator > 50000 (1994 dollars)",
+    "threshold_in_survey_year_dollars": 84718.9608636977,
+    "capital_gain_and_loss": "set to 0: ACS records no realised capital gains or losses"
+  },
+  "model": {
+    "name": "Stacking (HGB + LR -> LR) [natural]",
+    "file": "training-pipeline/artifacts/best_model.joblib",
+    "retrained": false
+  },
+  "mapping_diagnostics": {
+    "unseen_category_shares": {
+      "workclass": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "education": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "marital_status": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "occupation": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "relationship": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "race": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "sex": {
+        "share": 0.0,
+        "rows": 0,
+        "top_values": {}
+      },
+      "native_country": {
+        "share": 0.043932231109293944,
+        "rows": 8596,
+        "top_values": {
+          "Other": 8596
+        }
+      }
+    }
+  },
+  "ood": {
+    "probabilistic": {
+      "roc_auc": 0.8326864805478825,
+      "average_precision": 0.5805576014454807,
+      "brier": 0.14005730951687492,
+      "log_loss": 0.42738888595572616,
+      "ece": 0.06630765634430567,
+      "mean_predicted_probability": 0.25847358935604137,
+      "observed_positive_rate": 0.23472772340479903,
+      "weighted": {
+        "roc_auc": 0.8388652804434809,
+        "average_precision": 0.5641690533059011,
+        "brier": 0.13095864039103158,
+        "mean_predicted_probability": 0.23231414421517144,
+        "observed_positive_rate": 0.21336568997798944
+      }
+    },
+    "reference_at_0_5": {
+      "threshold": 0.5,
+      "accuracy": 0.7935553113740321,
+      "precision": 0.5569575957184026,
+      "precision_95ci": [
+        0.5525360035855461,
+        0.5613701807305639
+      ],
+      "recall": 0.5891177495209894,
+      "confusion_matrix": {
+        "tn": 128214,
+        "fp": 21523,
+        "fn": 18871,
+        "tp": 27057
+      }
+    },
+    "deterministic_threshold": {
+      "threshold": 0.7782267429815305,
+      "accuracy": 0.7901770883908722,
+      "precision": 0.7038400401572827,
+      "precision_95ci": [
+        0.695590771500337,
+        0.7119583305562464
+      ],
+      "recall": 0.18317801776693957,
+      "confusion_matrix": {
+        "tn": 146197,
+        "fp": 3540,
+        "fn": 37515,
+        "tp": 8413
+      }
+    },
+    "selective_classification": {
+      "band": [
+        0.23,
+        0.78
+      ],
+      "coverage": 0.6559629979812435,
+      "precision_mobility": 0.7051929164171443,
+      "precision_mobility_95ci": [
+        0.6968608357037609,
+        0.7133901727332379
+      ],
+      "precision_no_mobility": 0.9141779530258872,
+      "precision_no_mobility_95ci": [
+        0.9125569653570847,
+        0.9157716649328737
+      ],
+      "accuracy_on_covered": 0.8951452679802725,
+      "accuracy_on_covered_95ci": [
+        0.8934573532461789,
+        0.8968095301908718
+      ],
+      "positive_rate_inside_band": 0.4110909739140769,
+      "mean_probability_inside_band": 0.5192658799333217,
+      "expected_game_accuracy": 0.772050344808701,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 106648,
+          "luck": 39643,
+          "predicted_yes": 3446
+        },
+        "actual_mobility": {
+          "predicted_no": 10012,
+          "luck": 27673,
+          "predicted_yes": 8243
+        }
+      }
+    }
+  },
+  "in_distribution_1994_test": {
+    "roc_auc": 0.9312739765248077,
+    "brier": 0.08625910998373305,
+    "observed_positive_rate": 0.23939331830293092,
+    "coverage": 0.745029719204755,
+    "precision_mobility": 0.9568965517241379,
+    "precision_no_mobility": 0.9541154210028382,
+    "accuracy_on_covered": 0.9544704264099038,
+    "expected_game_accuracy": 0.8522322874367589
+  },
+  "shift_summary": {
+    "delta_roc_auc": -0.09858749597692518,
+    "delta_brier": 0.05379819953314187,
+    "prior_shift": -0.004665594898131897,
+    "calibration_in_the_large": 0.02374586595124234,
+    "delta_coverage": -0.08906672122351156,
+    "delta_precision_mobility": -0.2517036353069936,
+    "delta_precision_no_mobility": -0.03993746797695097,
+    "both_deterministic_precisions_at_least_95": false
+  },
+  "adaptation": {
+    "rule": "04_evaluator.choose_band: maximise coverage s.t. precision >= 95% for both deterministic decisions, each with >= 30 cases (grid step 0.01)",
+    "split": {
+      "adaptation_rows": 97832,
+      "held_out_rows": 97833,
+      "stratified": true,
+      "random_state": 42
+    },
+    "grid_reach_on_adaptation_half": {
+      "best_precision_mobility": {
+        "precision": 0.8012048192771084,
+        "at_cutoff": 0.92
+      },
+      "best_precision_no_mobility": {
+        "precision": 0.9930514488468362,
+        "at_cutoff": 0.01
+      }
+    },
+    "held_out_frozen_1994_band": {
+      "band": [
+        0.23,
+        0.78
+      ],
+      "coverage": 0.6557092187707624,
+      "precision_mobility": 0.7065909482016864,
+      "precision_mobility_95ci": [
+        0.6947505984252297,
+        0.7181583376099624
+      ],
+      "precision_no_mobility": 0.9153053703354531,
+      "precision_no_mobility_95ci": [
+        0.9130186049895367,
+        0.9175374459040658
+      ],
+      "accuracy_on_covered": 0.8963990646921278,
+      "accuracy_on_covered_95ci": [
+        0.894017070879859,
+        0.8987335866563212
+      ],
+      "positive_rate_inside_band": 0.41317578600480953,
+      "mean_probability_inside_band": 0.5203550317774247,
+      "expected_game_accuracy": 0.7726611431221843,
+      "decision_matrix": {
+        "actual_no_mobility": {
+          "predicted_no": 53398,
+          "luck": 19766,
+          "predicted_yes": 1705
+        },
+        "actual_mobility": {
+          "predicted_no": 4941,
+          "luck": 13917,
+          "predicted_yes": 4106
+        }
+      }
+    },
+    "adapted_band": null,
+    "adaptation_status": "TWO_SIDED_TARGET_NOT_REACHABLE: No uncertainty band reaches the precision target on validation",
+    "one_sided_adaptation": {
+      "status": "ADAPTED",
+      "policy": "deterministic 'no mobility' for p <= lower; weighted coin for every p > lower (no deterministic 'mobility')",
+      "lower_cutoff": 0.08,
+      "held_out": {
+        "band": [
+          0.08,
+          null
+        ],
+        "coverage": 0.4500730837243057,
+        "precision_mobility": null,
+        "precision_mobility_95ci": null,
+        "precision_no_mobility": 0.9533748183139535,
+        "precision_no_mobility_95ci": [
+          0.9513656836952797,
+          0.955304852787624
+        ],
+        "accuracy_on_covered": 0.9533748183139535,
+        "accuracy_on_covered_95ci": [
+          0.9513656836952797,
+          0.955304852787624
+        ],
+        "positive_rate_inside_band": 0.38867307299120835,
+        "mean_probability_inside_band": 0.45406842681096854,
+        "expected_game_accuracy": 0.7566970834704853,
+        "decision_matrix": {
+          "actual_no_mobility": {
+            "predicted_no": 41979,
+            "luck": 32890,
+            "predicted_yes": 0
+          },
+          "actual_mobility": {
+            "predicted_no": 2053,
+            "luck": 20911,
+            "predicted_yes": 0
+          }
+        }
+      }
+    }
+  }
+}

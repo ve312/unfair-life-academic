@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "stories",
+  "info": {
+    "singularName": "story",
+    "pluralName": "stories",
+    "displayName": "Story",
+    "description": "Entry point of a narrative graph: a playable story, the year it is set in, the scene it starts on, and base_profile (optional, required only by stories with mobility checks): the character every playthrough starts as, on which the decisions' hidden_modifiers act."
+  },
+  "config": {
+    "metadatas": {
+      "base_profile": {
+        "edit": {
+          "label": "Perfil base del personaje",
+          "description": "Opcional: solo lo necesitan las historias con pruebas de movilidad (decisiones que consultan a la IA); en una historia puramente narrativa puedes vaciarlo. Es el personaje con el que empieza la historia: la IA evalúa cada prueba de movilidad sobre este perfil más los modificadores ocultos de la decisión. Incluye exactamente las 13 características del modelo: age (17-90), education-num (1-16), hours-per-week (1-99), capital-gain y capital-loss (enteros ≥ 0), y workclass, education, marital-status, occupation, relationship, race, sex, native-country (texto, con la ortografía del censo). education y education-num deben coincidir (p. ej. Bachelors = 13, HS-grad = 9). Las cantidades de dinero son del año de la historia."
+        }
+      }
+    }
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "text"
+    },
+    "short_description": {
+      "type": "text",
+      "maxLength": 280
+    },
+    "cover_image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "year": {
+      "type": "integer",
+      "required": true,
+      "default": 2026,
+      "min": 1990,
+      "max": 2100
+    },
+    "base_profile": {
+      "type": "json",
+      "required": false,
+      "default": {
+        "age": 25,
+        "workclass": "Private",
+        "education": "Bachelors",
+        "education-num": 13,
+        "marital-status": "Never-married",
+        "occupation": "Prof-specialty",
+        "relationship": "Not-in-family",
+        "race": "White",
+        "sex": "Male",
+        "hours-per-week": 40,
+        "native-country": "United-States",
+        "capital-gain": 0,
+        "capital-loss": 0
+      }
+    },
+    "starting_scene": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::scene.scene"
+    },
+    "scenes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scene.scene",
+      "mappedBy": "story"
+    }
+  }
+}

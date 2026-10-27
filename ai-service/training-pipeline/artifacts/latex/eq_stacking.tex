@@ -1,0 +1,9 @@
+\begin{align}
+F(x) &= b + w_{\text{hgb}}\, F_{\text{hgb}}(x) + w_{\text{lr}}\, F_{\text{lr}}(x), \qquad
+F_{\text{lr}}(x) = \beta_0 + \sum_{j} \beta_j\, \frac{x_j - \mu_j}{s_j}, \qquad
+\hat{p}(x) = \sigma\bigl(F(x)\bigr) \\
+(b, w) &= \arg\min_{b,\,w}\ -\frac{1}{n}\sum_{i=1}^{n}\Bigl[y_i \log \sigma\bigl(F^{\text{oof}}(x_i)\bigr)
++ (1-y_i)\log\Bigl(1-\sigma\bigl(F^{\text{oof}}(x_i)\bigr)\Bigr)\Bigr] + \frac{1}{2C}\lVert w \rVert_2^2,
+\qquad K = 5 \text{ folds} \\
+b &= 0.0114, \qquad w_{\text{hgb}} = 0.8848, \qquad w_{\text{lr}} = 0.1013
+\end{align}

@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "audio_tracks",
+  "info": {
+    "singularName": "audio-track",
+    "pluralName": "audio-tracks",
+    "displayName": "Audio Track",
+    "description": "A reusable music or ambience track that scenes play through Howler.js."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 120
+    },
+    "audio_file": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["audios"]
+    },
+    "loop": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "default_volume": {
+      "type": "decimal",
+      "required": true,
+      "default": 1,
+      "min": 0,
+      "max": 1
+    },
+    "scenes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scene.scene",
+      "mappedBy": "audio_track"
+    }
+  }
+}

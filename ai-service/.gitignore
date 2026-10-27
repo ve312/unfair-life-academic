@@ -1,0 +1,5 @@
+# ACS PUMS downloads of 05_ood_testing.py (hundreds of MB per state; re-downloadable with folktables).
+.folktables-cache/
+
+# Local secrets (inference-api/.env holds BFF_SECRET_TOKEN).
+.env

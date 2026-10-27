@@ -1,0 +1,110 @@
+{
+  "kind": "collectionType",
+  "collectionName": "scenes",
+  "info": {
+    "singularName": "scene",
+    "pluralName": "scenes",
+    "displayName": "Scene",
+    "description": "A node of the narrative graph: what the player sees and hears, and the decisions leading out of it. 'context' holds the full narrative context of the scene for editors. 'year' overrides the story's year for time jumps. media_* / audio_* start and end times (seconds) play only a fragment of the background video or the audio track."
+  },
+  "config": {
+    "metadatas": {
+      "context": {
+        "edit": {
+          "label": "Contexto narrativo",
+          "description": "Describe la escena completa: quién es el personaje en este momento, qué está pasando y qué está en juego. El título solo la identifica.",
+          "placeholder": "Ej.: 1998, Ciudad de Guatemala. Ana tiene 19 años, acaba de terminar el bachillerato y su familia necesita otro ingreso..."
+        }
+      }
+    }
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "context": {
+      "type": "text",
+      "required": false
+    },
+    "background_media": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images", "videos"]
+    },
+    "media_start_time": {
+      "type": "float",
+      "required": false,
+      "min": 0
+    },
+    "media_end_time": {
+      "type": "float",
+      "required": false,
+      "min": 0
+    },
+    "timer_duration": {
+      "type": "integer",
+      "required": true,
+      "default": 0,
+      "min": 0,
+      "max": 600
+    },
+    "is_cinematic": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "year": {
+      "type": "integer",
+      "required": false,
+      "min": 1990,
+      "max": 2100
+    },
+    "story": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::story.story",
+      "inversedBy": "scenes"
+    },
+    "audio_track": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::audio-track.audio-track",
+      "inversedBy": "scenes"
+    },
+    "audio_start_time": {
+      "type": "float",
+      "required": false,
+      "min": 0
+    },
+    "audio_end_time": {
+      "type": "float",
+      "required": false,
+      "min": 0
+    },
+    "available_decisions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::decision.decision",
+      "mappedBy": "source_scene"
+    },
+    "incoming_decisions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::decision.decision",
+      "mappedBy": "next_scene"
+    },
+    "incoming_failure_decisions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::decision.decision",
+      "mappedBy": "failure_scene"
+    }
+  }
+}

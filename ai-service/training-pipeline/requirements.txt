@@ -1,0 +1,7 @@
+pandas
+scikit-learn
+imbalanced-learn
+jupyter
+pyarrow
+shap
+matplotlib
